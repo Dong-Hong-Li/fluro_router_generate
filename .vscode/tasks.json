@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dart: run build_runner build",
+      "type": "shell",
+      "command": "dart run build_runner build --delete-conflicting-outputs",
+      "group": "build",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "dart: run build_runner watch",
+      "type": "shell",
+      "command": "dart run build_runner watch --delete-conflicting-outputs",
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    }
+  ]
+}

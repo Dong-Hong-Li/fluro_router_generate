@@ -1,0 +1,26 @@
+name: fluro_router_generate
+description: A powerful Flutter routing library with animated transitions, route matching, and custom navigation support.
+version: 1.0.0
+publish_to: 'none'
+
+environment:
+  sdk: ^3.8.1
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # 代码生成器
+  source_gen: ^4.2.0
+
+  # 构建器
+  build_runner: ^2.10.5
+  glob: ^2.0.0
+
+  # 代码规范检查（与主项目保持一致）
+  flutter_lints: ">=5.0.0 <7.0.0"
+
+dev_dependencies:
+  analyzer: ^10.0.0
+  path: ^1.9.0

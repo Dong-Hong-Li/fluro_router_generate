@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug router_generator",
+      "request": "launch",
+      "type": "dart",
+      "program": "tool/debug_router_generator.dart"
+    },
+    {
+      "name": "运行 Example 应用",
+      "request": "launch",
+      "type": "dart",
+      "program": "example/lib/main.dart",
+      "cwd": "${workspaceFolder}/example"
+    },
+    {
+      "name": "Run Build Runner",
+      "type": "dart",
+      "request": "launch",
+      "program": "${workspaceFolder}/.dart_tool/build/entrypoint/build.dart",
+      "args": ["build"]
+    },
+    {
+      "name": "Run Build Runner (delete conflicting)",
+      "type": "dart",
+      "request": "launch",
+      "program": "${workspaceFolder}/.dart_tool/build/entrypoint/build.dart",
+      "args": ["build", "--delete-conflicting-outputs"]
+    },
+    {
+      "name": "Watch Build Runner",
+      "type": "dart",
+      "request": "launch",
+      "program": "${workspaceFolder}/.dart_tool/build/entrypoint/build.dart",
+      "args": ["watch", "--delete-conflicting-outputs"]
+    }
+  ]
+}

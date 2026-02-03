@@ -1,0 +1,82 @@
+import 'package:fluro_router_generate/fluro_router.dart';
+import 'package:flutter/material.dart';
+
+abstract class FluroConfig {
+  static FluroRouter get router => FluroRouter.appRouter;
+  static BuildContext? _context;
+  static BuildContext? get currentContext => _context;
+  set context(BuildContext? value) {
+    _context = value;
+  }
+
+  /// 当用户尝试导航到一个未定义的路由时 返回一个边界路由
+  set notFoundHandler(FluroHandler? handler) {
+    router.notFoundHandler = handler;
+  }
+
+  /// 跳转边界路由是否清空堆栈
+  set notFoundClearStack(bool value) {
+    router.notFoundClearStack = value;
+  }
+
+  /// 由带 [EntranceAnnotation] 的配置类对应生成的 .g.dart 扩展实现；
+  /// 子类通过扩展获得 [initAllHandlers]，基类不声明以避免遮蔽扩展方法。
+
+  /// 导航到指定路径的路由，并可配置路由的导航行为和过渡效果。
+  ///
+  /// - `path`：路由路径
+  /// - `replace`：是否替换当前路由
+  /// - `clearStack`：是否清空路由栈
+  /// - `maintainState`：是否保持状态
+  /// - `rootNavigator`：是否使用根导航器
+  /// - `context`：上下文对象
+  /// - `transition`：过渡效果
+  /// - `transitionDuration`：过渡时间
+  /// - `transitionCurve`：过渡动画曲线
+  /// - `transitionBuilder`：自定义过渡效果的构建器
+  /// - `routeSettings`：路由设置a
+  /// - `opaque`：是否透明
+  ///
+  /// ```dart
+  /// push(
+  ///   '/details',
+  ///   context: context,
+  ///   replace: true,
+  ///   clearStack: true,
+  ///   transition: TransitionType.inFromRight,
+  ///   transitionCurve: Curves.easeOutCubic,
+  /// );
+  /// ```
+  static Future<T?> push<T extends Object?>(
+    String path, {
+    bool replace = false,
+    bool clearStack = false,
+    bool maintainState = true,
+    bool rootNavigator = false,
+    BuildContext? context,
+    TransitionType transition = TransitionType.inFromRight,
+    Duration? transitionDuration,
+    Curve? transitionCurve,
+    RouteTransitionsBuilder? transitionBuilder,
+    RouteSettings? routeSettings,
+    bool? opaque,
+  }) async {
+    if (context == null && _context == null) {
+      throw Exception('context is not set, please set context in FiuroConfig');
+    }
+    return await router.navigateTo(
+      context ?? _context!,
+      path,
+      replace: replace,
+      clearStack: clearStack,
+      maintainState: maintainState,
+      rootNavigator: rootNavigator,
+      transition: transition,
+      transitionDuration: transitionDuration,
+      transitionCurve: transitionCurve,
+      transitionBuilder: transitionBuilder,
+      routeSettings: routeSettings,
+      opaque: opaque,
+    );
+  }
+}

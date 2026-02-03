@@ -1,0 +1,8 @@
+# 仅对路由入口触发生成
+targets:
+  $default:
+    builders:
+      fluro_router_generate|router_library:
+        generate_for:
+          include:
+            - lib/router/router_config.dart

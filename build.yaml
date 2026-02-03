@@ -1,0 +1,14 @@
+# fluro_router_generate 包内 build 配置（供 pub 发布）
+# 使用方项目必须依赖本包，并在自己项目根目录创建 build.yaml，见 README「配置 build.yaml」一节
+
+builders:
+  # 生成器名称，使用方通过 fluro_router_generate|router_library 引用
+  router_library:
+    import: "package:fluro_router_generate/src/generate/builder/builds.dart"
+    builder_factories: ["buildRouter"]
+    # 输入 .dart → 输出同目录 .g.dart
+    build_extensions:
+      ".dart": [".g.dart"]
+    build_to: source
+    # 仅在被依赖的项目中运行，不在本包内对任意 .dart 全量跑
+    auto_apply: dependents
