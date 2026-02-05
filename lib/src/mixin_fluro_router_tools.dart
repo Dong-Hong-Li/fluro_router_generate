@@ -39,7 +39,7 @@ mixin FluroRouterTools {
   ///- `path`：路径
   RouteSettings settingsHandle(RouteSettings? routeSettings, String? path) =>
       (routeSettings?.name == null)
-      ? RouteSettings(name: path)
+      ? RouteSettings(name: path, arguments: routeSettings?.arguments)
       : routeSettings!;
 
   /// 路由生成方法。这个函数可以用来动态创建原生路由

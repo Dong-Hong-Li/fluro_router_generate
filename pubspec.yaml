@@ -10,7 +10,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
+    
+  # 用于从 ClassElement 读取构造函数参数类型
+  analyzer: ^10.0.0
+
+
   # 代码生成器
   source_gen: ^4.2.0
 
@@ -22,5 +26,4 @@ dependencies:
   flutter_lints: ">=5.0.0 <7.0.0"
 
 dev_dependencies:
-  analyzer: ^10.0.0
   path: ^1.9.0

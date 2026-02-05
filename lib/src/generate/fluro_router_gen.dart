@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:glob/glob.dart';
 import 'package:fluro_router_generate/src/generate/annotation/router_annotation.dart';
@@ -68,6 +70,78 @@ String _inferParamType(ConstantReader valueReader) {
   return 'string';
 }
 
+/// 从页面类的构造函数读取参数的真实类型（用于 routeSettingsArguments）。
+/// 返回与 paramKeys 一一对应的 (类型显示名, 类型所在库的 import URI)。
+(List<String> paramTypeNames, List<String?> paramTypeImportUris)
+_getConstructorParamTypes(ClassElement classElement, List<String> paramKeys) {
+  final typeNames = <String>[];
+  final importUris = <String?>[];
+  if (paramKeys.isEmpty) return (typeNames, importUris);
+
+  ConstructorElement? ctor;
+  for (final c in classElement.constructors) {
+    if (c.isFactory) continue;
+    final paramNames = c.formalParameters
+        .where((p) => !p.isSuperFormal && p.name != null)
+        .map((p) => p.name!)
+        .toSet();
+    if (paramKeys.every((k) => paramNames.contains(k))) {
+      ctor = c;
+      break;
+    }
+  }
+  if (ctor == null) {
+    for (final _ in paramKeys) {
+      typeNames.add('');
+      importUris.add(null);
+    }
+    return (typeNames, importUris);
+  }
+
+  final paramByName = {for (final p in ctor.formalParameters) p.name!: p};
+  for (final k in paramKeys) {
+    final p = paramByName[k];
+    if (p == null) {
+      typeNames.add('');
+      importUris.add(null);
+      continue;
+    }
+    final dartType = p.type;
+    typeNames.add(dartType.getDisplayString(withNullability: true));
+
+    String? uri;
+    if (dartType is InterfaceType) {
+      final lib = dartType.element.library;
+      final u = lib.uri.toString();
+      if (u.startsWith('package:')) uri = u;
+    }
+    importUris.add(uri);
+  }
+  return (typeNames, importUris);
+}
+
+/// 从页面类的构造函数读取「路由参数」名列表（用于 routeSettingsArguments 未写 defaultParams 时）。
+/// 排除 super 形参和 Flutter 约定的 key，返回顺序与构造函数一致。
+List<String> _getRouteSettingsParamKeys(ClassElement classElement) {
+  for (final c in classElement.constructors) {
+    if (c.isFactory) continue;
+    final names = <String>[];
+    for (final p in c.formalParameters) {
+      if (p.isSuperFormal || p.name == null) continue;
+      if (p.name == 'key') continue; // Flutter Widget 常见 key，不作为路由参数
+      names.add(p.name!);
+    }
+    if (names.isNotEmpty) return names;
+  }
+  return [];
+}
+
+/// 判断是否为“基础类型”（int/double/bool/String），仅用 defaultParams 字面量时按 string 处理
+bool _isPrimitiveOrStringType(String typeDisplayName) {
+  final t = typeDisplayName.replaceAll('?', '').trim();
+  return t == 'int' || t == 'double' || t == 'bool' || t == 'String';
+}
+
 /// 将注解中的 defaultParams Map 转为 (keys, defaults, types)
 /// types 与 keys 一一对应：'int'|'double'|'bool'|'string'，用于生成非 String 传参
 (List<String> keys, List<String> defaults, List<String> types)
@@ -85,7 +159,7 @@ _readDefaultParamsMap(ConstantReader annotation) {
       if (k.isEmpty) continue;
       keys.add(k);
       final vr = ConstantReader(e.value);
-      if (e.value == null) {
+      if (vr.isNull) {
         defaults.add('');
         types.add('string');
       } else {
@@ -203,14 +277,16 @@ void _writeImports(
   buffer.writeln("import 'package:fluro_router_generate/fluro_router.dart';");
 
   // 写入各页面库
-  final uris =
-      entries
-          .map((e) => e.importUri)
-          .where((u) => u.isNotEmpty)
-          .toSet()
-          .toList()
-        ..sort();
-  for (final uri in uris) {
+  final uris = <String>{};
+  for (final e in entries) {
+    if (e.importUri.isNotEmpty) uris.add(e.importUri);
+    // 为 routeSettingsArguments 的对象类型补充类型所在库的 import
+    for (final typeUri in e.paramTypeImportUris) {
+      if (typeUri != null && typeUri.isNotEmpty) uris.add(typeUri);
+    }
+  }
+  final sortedUris = uris.toList()..sort();
+  for (final uri in sortedUris) {
     buffer.writeln("import '$uri';");
   }
   buffer.writeln();
@@ -271,7 +347,30 @@ String _buildHandlerCall(_RouteEntry e) {
       final k = e.paramKeys[i];
       final d = (i < e.paramDefaults.length ? e.paramDefaults[i] : '')
           .replaceAll("'", "\\'");
-      sb.writeln("$indent final $k = argsMap?['$k']?.toString() ?? '$d';");
+      final typeName = i < e.paramTypeNames.length ? e.paramTypeNames[i] : '';
+      final fromCtor = typeName.isNotEmpty;
+      final isObjectType = fromCtor && !_isPrimitiveOrStringType(typeName);
+
+      if (isObjectType) {
+        sb.writeln("$indent final $k = argsMap?['$k'] as $typeName;");
+      } else {
+        final prim = i < e.paramTypes.length ? e.paramTypes[i] : 'string';
+        if (prim == 'int') {
+          sb.writeln(
+            "$indent final $k = int.tryParse(argsMap?['$k']?.toString() ?? '') ?? ${d.isEmpty ? '0' : d};",
+          );
+        } else if (prim == 'double') {
+          sb.writeln(
+            "$indent final $k = double.tryParse(argsMap?['$k']?.toString() ?? '') ?? ${d.isEmpty ? '0.0' : d};",
+          );
+        } else if (prim == 'bool') {
+          sb.writeln(
+            "$indent final $k = (argsMap?['$k']?.toString() ?? '$d').toLowerCase() == 'true';",
+          );
+        } else {
+          sb.writeln("$indent final $k = argsMap?['$k']?.toString() ?? '$d';");
+        }
+      }
     }
     final ctorArgs = e.paramKeys.map((k) => '$k: $k').join(', ');
     sb.writeln('$indent return $className($ctorArgs);');
@@ -352,7 +451,7 @@ Future<List<_RouteEntry>> _collectAnnotatedRoutes(BuildStep buildStep) async {
     }
 
     /// 遍历当前类库中的所有类
-    for (final element in lib.classes) {
+    for (final ClassElement element in lib.classes) {
       // 检查类是否带有 [RouterAnnotation] 注解，如果类不带有 [RouterAnnotation] 注解，则跳过
       final annotation = _annotationChecker.firstAnnotationOf(element);
       if (annotation == null) continue;
@@ -370,9 +469,29 @@ Future<List<_RouteEntry>> _collectAnnotatedRoutes(BuildStep buildStep) async {
       final constructorParams = _readConstructorParams(reader);
 
       // 获取传入参数的 (键、默认值、类型)
-      final (paramKeys, paramDefaults, paramTypes) = _readDefaultParamsMap(
+      var (paramKeys, paramDefaults, paramTypes) = _readDefaultParamsMap(
         reader,
       );
+
+      // 当使用 routeSettingsArguments 且未写 defaultParams 时，从页面类构造函数推断参数名
+      if (constructorParams == 'routeSettingsArguments' && paramKeys.isEmpty) {
+        final inferredKeys = _getRouteSettingsParamKeys(element);
+        if (inferredKeys.isNotEmpty) {
+          paramKeys = inferredKeys;
+          paramDefaults = List.filled(paramKeys.length, '');
+          paramTypes = List.filled(paramKeys.length, 'string');
+        }
+      }
+
+      // 当使用 routeSettingsArguments 时，从页面类构造函数读取参数真实类型
+      List<String> paramTypeNames = [];
+      List<String?> paramTypeImportUris = [];
+      if (constructorParams == 'routeSettingsArguments' &&
+          paramKeys.isNotEmpty) {
+        final r = _getConstructorParamTypes(element, paramKeys);
+        paramTypeNames = r.$1;
+        paramTypeImportUris = r.$2;
+      }
 
       // 获取描述
       final description = reader.peek('description')?.stringValue;
@@ -386,6 +505,8 @@ Future<List<_RouteEntry>> _collectAnnotatedRoutes(BuildStep buildStep) async {
           paramKeys: paramKeys,
           paramDefaults: paramDefaults,
           paramTypes: paramTypes,
+          paramTypeNames: paramTypeNames,
+          paramTypeImportUris: paramTypeImportUris,
           description: description,
         ),
       );
@@ -414,8 +535,14 @@ class _RouteEntry {
   /// 参数默认值
   final List<String> paramDefaults;
 
-  /// 参数类型
+  /// 参数类型（来自 defaultParams 字面量推断：int/double/bool/string）
   final List<String> paramTypes;
+
+  /// 参数真实类型显示名（来自页面类构造函数，用于 routeSettingsArguments 对象类型 as Type?）
+  final List<String> paramTypeNames;
+
+  /// 参数类型所在库的 import URI（用于为对象类型添加 import）
+  final List<String?> paramTypeImportUris;
 
   /// 描述
   final String? description;
@@ -428,10 +555,14 @@ class _RouteEntry {
     List<String>? paramKeys,
     List<String>? paramDefaults,
     List<String>? paramTypes,
+    List<String>? paramTypeNames,
+    List<String?>? paramTypeImportUris,
     this.description,
   }) : paramKeys = paramKeys ?? [],
        paramDefaults = paramDefaults ?? [],
-       paramTypes = paramTypes ?? [];
+       paramTypes = paramTypes ?? [],
+       paramTypeNames = paramTypeNames ?? [],
+       paramTypeImportUris = paramTypeImportUris ?? [];
 
   /// FluroRouter 路径参数（如 /home/:id）或查询参数（如 /home?id=1）时需将 parameters 传给页面
   bool get hasPathOrQueryParams => path.contains(':') || path.contains('?');
