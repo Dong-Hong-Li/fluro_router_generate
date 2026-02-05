@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fluro_router_generate/fluro_router.dart';
 
+/// 传参场景：单路径参数 (pathParams)
 @RouterAnnotation(
   path: '/detail/:id',
-  description: '详情页',
+  description: '详情页（单路径参数）',
   defaultParams: {'id': '0'},
   constructorParams: HandlerConstructorParams.pathParams,
 )

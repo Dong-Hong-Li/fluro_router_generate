@@ -1,7 +1,14 @@
 enum HandlerConstructorParams {
+  /// 不传参
   none,
+
+  /// 传入路径参数
   pathParams,
+
+  /// 传入查询参数
   queryParams,
+
+  /// 传入 RouteSettings 参数
   routeSettingsArguments,
 }
 

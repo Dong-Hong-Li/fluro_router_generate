@@ -164,7 +164,16 @@ _readDefaultParamsMap(ConstantReader annotation) {
         types.add('string');
       } else {
         types.add(_inferParamType(vr));
-        defaults.add(vr.stringValue);
+        // int/double/bool 用类型安全方式取字符串，避免 stringValue 导致异常或长度不一致
+        if (vr.isInt) {
+          defaults.add(vr.intValue.toString());
+        } else if (vr.isDouble) {
+          defaults.add(vr.doubleValue.toString());
+        } else if (vr.isBool) {
+          defaults.add(vr.boolValue == true ? 'true' : 'false');
+        } else {
+          defaults.add(vr.stringValue);
+        }
       }
     }
   } catch (_) {}
@@ -473,13 +482,31 @@ Future<List<_RouteEntry>> _collectAnnotatedRoutes(BuildStep buildStep) async {
         reader,
       );
 
-      // 当使用 routeSettingsArguments 且未写 defaultParams 时，从页面类构造函数推断参数名
-      if (constructorParams == 'routeSettingsArguments' && paramKeys.isEmpty) {
+      // 当使用 routeSettingsArguments 时：以构造函数参数为传参列表，defaultParams 只提供默认值/类型
+      // 这样写 defaultParams: {count: 0} 时仍会生成 title、count 两个参数，仅 count 有默认值
+      if (constructorParams == 'routeSettingsArguments') {
         final inferredKeys = _getRouteSettingsParamKeys(element);
         if (inferredKeys.isNotEmpty) {
+          final defaultByKey = <String, ({String def, String typ})>{};
+          for (
+            var i = 0;
+            i < paramKeys.length &&
+                i < paramDefaults.length &&
+                i < paramTypes.length;
+            i++
+          ) {
+            defaultByKey[paramKeys[i]] = (
+              def: paramDefaults[i],
+              typ: paramTypes[i],
+            );
+          }
           paramKeys = inferredKeys;
-          paramDefaults = List.filled(paramKeys.length, '');
-          paramTypes = List.filled(paramKeys.length, 'string');
+          paramDefaults = paramKeys
+              .map((k) => defaultByKey[k]?.def ?? '')
+              .toList();
+          paramTypes = paramKeys
+              .map((k) => defaultByKey[k]?.typ ?? 'string')
+              .toList();
         }
       }
 

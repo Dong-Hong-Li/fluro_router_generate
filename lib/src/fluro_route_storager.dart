@@ -29,10 +29,13 @@ class FluroRouteStorager with RouteTreeTools {
     if (path.startsWith("/")) path = path.substring(1);
     final pathComponents = path.split('/');
 
-    // 逐层构建路由树
+    // 逐层构建路由树（只使用路径部分，不含 query string，以便与 matchRoute 一致）
     RouteTreeNode? parent;
     for (int i = 0; i < pathComponents.length; i++) {
       String itemFragment = pathComponents[i];
+      if (itemFragment.contains('?')) {
+        itemFragment = itemFragment.split('?').first;
+      }
       RouteTreeNode? node = nodeForComponent(itemFragment, parent, _nodes);
       if (node == null) {
         node = RouteTreeNode(itemFragment, typeForComponent(itemFragment))

@@ -116,3 +116,19 @@ FluroConfig.router.navigateTo(context, '/home/1');
 | `constructorParams` | 可选，`pathParams` / `queryParams` / `routeSettingsArguments` / `none`，决定参数如何传入构造函数 |
 
 更多用法见 `example/`。
+
+---
+
+## 常见问题
+
+### defaultParams 和构造函数，对参数名称哪个优先级高？
+
+- **参数名单与默认值**：由 **defaultParams** 决定。只有未写 `defaultParams`（或写空 `{}`）时，才用**构造函数**推断参数名。
+- **参数类型**：名单确定后，类型始终从**构造函数**读取。
+- 因此：**defaultParams 优先级更高**（决定传哪几个参数、默认值）；构造函数用于在未写 defaultParams 时补全名单，并始终提供类型。
+
+### 构造函数类型是 A，但 defaultParams 里写的是类型 B，以谁为准？
+
+- **类型以构造函数类型 A 为准**；defaultParams 的字面类型 B 只影响默认值，不改变「按什么类型解析」。
+- 若 A 是对象类型，生成代码一定是 `argsMap?['key'] as A`，不会用 B 做 int/double 等解析。
+- 结论：**构造函数类型 A 优先级更高**；defaultParams 的类型 B 不会覆盖 A。
