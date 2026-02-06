@@ -5,6 +5,7 @@ import 'package:fluro_router_generate/fluro_router.dart';
 @RouterAnnotation(
   path: '/detail/:id',
   description: '详情页（单路径参数）',
+  module: 'main',
   defaultParams: {'id': '0'},
   constructorParams: HandlerConstructorParams.pathParams,
 )

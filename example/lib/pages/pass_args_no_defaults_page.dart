@@ -5,6 +5,7 @@ import 'package:fluro_router_generate/fluro_router.dart';
 @RouterAnnotation(
   path: '/pass-args-no-defaults',
   description: 'RouteSettings.arguments 传参（无 defaultParams，从构造函数推断）',
+  module: 'demo',
   constructorParams: HandlerConstructorParams.routeSettingsArguments,
 )
 class PassArgsNoDefaultsPage extends StatelessWidget {

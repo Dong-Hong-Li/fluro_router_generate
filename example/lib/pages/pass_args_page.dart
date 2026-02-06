@@ -5,6 +5,7 @@ import 'package:fluro_router_generate/fluro_router.dart';
 @RouterAnnotation(
   path: '/pass-args',
   description: 'RouteSettings.arguments 传参（有 defaultParams）',
+  module: 'demo',
   defaultParams: {'count': 0},
   constructorParams: HandlerConstructorParams.routeSettingsArguments,
 )

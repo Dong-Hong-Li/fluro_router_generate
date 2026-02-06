@@ -114,8 +114,160 @@ FluroConfig.router.navigateTo(context, '/home/1');
 | `description` | 可选，生成列表中的注释 |
 | `defaultParams` | 可选，参数默认值，如 `{'id': '-', 'page': 1}` |
 | `constructorParams` | 可选，`pathParams` / `queryParams` / `routeSettingsArguments` / `none`，决定参数如何传入构造函数 |
+| `module` | 可选，模块名，用于分文件生成与分组；配合 build.yaml 的 `split_modules` 可拆成独立 `.g.dart` |
 
 更多用法见 `example/`。
+
+---
+
+## 案例
+
+### 1. 传参类型案例
+
+| 场景 | path 示例 | constructorParams | 说明 |
+|------|-----------|-------------------|------|
+| 无参数 | `/home` | `none` | 不传参 |
+| 单路径参数 | `/detail/:id` | `pathParams` | 匹配 `/detail/99`，参数 `id` |
+| 多路径参数 | `/user/:userId/post/:postId` | `pathParams` | 匹配 `/user/1/post/2`，参数 `userId`、`postId` |
+| 查询参数 | `/search?keyword=&page=1` | `queryParams` | 匹配 `/search?keyword=test&page=2`，参数从 query 解析 |
+| routeSettings 有 defaultParams | `/pass-args` | `routeSettingsArguments` + `defaultParams: {'title': '默认', 'count': 0}` | 通过 `RouteSettings.arguments` 传参，未传时用默认值 |
+| routeSettings 无 defaultParams | `/pass-args-no-defaults` | `routeSettingsArguments`（不写 defaultParams） | 参数名从构造函数推断，适合临时传参 |
+
+**无参数：**
+
+```dart
+@RouterAnnotation(path: '/home', constructorParams: HandlerConstructorParams.none)
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+  // ...
+}
+```
+
+**单路径参数：**
+
+```dart
+@RouterAnnotation(
+  path: '/detail/:id',
+  defaultParams: {'id': '0'},
+  constructorParams: HandlerConstructorParams.pathParams,
+)
+class DetailPage extends StatelessWidget {
+  const DetailPage({super.key, required this.id});
+  final String id;
+  // ...
+}
+```
+
+**多路径参数：**
+
+```dart
+@RouterAnnotation(
+  path: '/user/:userId/post/:postId',
+  defaultParams: {'userId': '0', 'postId': '0'},
+  constructorParams: HandlerConstructorParams.pathParams,
+)
+class PostPage extends StatelessWidget {
+  const PostPage({super.key, required this.userId, required this.postId});
+  final String userId;
+  final String postId;
+  // ...
+}
+```
+
+**查询参数：**
+
+```dart
+@RouterAnnotation(
+  path: '/search?keyword=&page=1',
+  defaultParams: {'keyword': '', 'page': '1'},
+  constructorParams: HandlerConstructorParams.queryParams,
+)
+class SearchPage extends StatelessWidget {
+  const SearchPage({super.key, required this.keyword, required this.page});
+  final String keyword;
+  final String page;
+  // ...
+}
+```
+
+**routeSettings.arguments 传参（有 defaultParams）：**
+
+```dart
+@RouterAnnotation(
+  path: '/pass-args',
+  defaultParams: {'title': '默认标题', 'count': 0},
+  constructorParams: HandlerConstructorParams.routeSettingsArguments,
+)
+class PassArgsPage extends StatelessWidget {
+  const PassArgsPage({super.key, required this.title, required this.count});
+  final String title;
+  final int count;
+  // ...
+}
+```
+
+### 2. 跳转与传参案例
+
+```dart
+// 无参数
+FluroConfig.push('/home', context: context);
+
+// 路径参数
+FluroConfig.push('/detail/99', context: context);
+FluroConfig.push('/user/1/post/2', context: context);
+
+// 查询参数
+FluroConfig.push('/search?keyword=test&page=1', context: context);
+
+// routeSettings.arguments
+FluroConfig.push(
+  '/pass-args',
+  context: context,
+  routeSettings: RouteSettings(
+    name: '/pass-args',
+    arguments: {'title': '传入标题', 'count': 42},
+  ),
+);
+```
+
+### 3. 分文件与 module、split_modules 案例
+
+页面注解里加 `module`，同名模块会生成到同一块（或同一文件）：
+
+```dart
+@RouterAnnotation(
+  path: '/home',
+  module: 'main',
+  constructorParams: HandlerConstructorParams.none,
+)
+class HomePage extends StatelessWidget { ... }
+
+@RouterAnnotation(
+  path: '/payment/:orderId',
+  module: 'payment',
+  defaultParams: {'orderId': ''},
+  constructorParams: HandlerConstructorParams.pathParams,
+)
+class PaymentPage extends StatelessWidget { ... }
+```
+
+若希望 `payment` 模块拆成独立文件 `router_config_payment.g.dart`，在**项目根目录** `build.yaml` 里为该 builder 增加 `split_modules`：
+
+```yaml
+targets:
+  $default:
+    builders:
+      fluro_router_generate|router_library:
+        generate_for:
+          include:
+            - lib/router/router_config.dart
+        options:
+          split_modules:
+            - payment
+            - admin
+```
+
+未在 `split_modules`（及默认列表）中的 `module` 会合并到主文件内联，不会单独成文件。完整示例见 `example/`。
 
 ---
 

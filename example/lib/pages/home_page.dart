@@ -5,6 +5,7 @@ import 'package:fluro_router_generate/fluro_router.dart';
 @RouterAnnotation(
   path: '/home',
   description: '首页（无参数）',
+  module: 'main',
   constructorParams: HandlerConstructorParams.none,
 )
 class HomePage extends StatelessWidget {

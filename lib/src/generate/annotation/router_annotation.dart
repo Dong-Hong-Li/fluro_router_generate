@@ -26,6 +26,10 @@ class RouterAnnotation {
   /// 描述
   final String? description;
 
+  /// 可选模块名，用于在生成代码中按模块分组路由，便于阅读（如 'auth'、'user'、'home'）。
+  /// 未设置时归入 default 组。
+  final String? module;
+
   /// 在构造函数传入参数
   ///
   /// ```dart
@@ -80,6 +84,7 @@ class RouterAnnotation {
     required this.path,
     this.defaultParams,
     this.description,
+    this.module,
     this.constructorParams = HandlerConstructorParams.none,
   });
 }

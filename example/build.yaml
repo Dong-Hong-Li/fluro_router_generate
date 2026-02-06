@@ -6,3 +6,14 @@ targets:
         generate_for:
           include:
             - lib/router/router_config.dart
+
+        options:
+          split_modules:
+            - main
+            - demo
+            - feature
+            - auth
+            - user
+            - home
+            - settings
+            - order

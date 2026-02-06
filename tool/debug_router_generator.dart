@@ -41,7 +41,7 @@ void main() async {
     resolver: resolver,
   );
 
-  final builder = RouterTableBuilder();
+  final builder = RouterTableBuilder(BuilderOptions.empty);
   await builder.build(buildStep);
   final content = (buildStep).writtenContent;
   if (content == null || content.isEmpty) {
