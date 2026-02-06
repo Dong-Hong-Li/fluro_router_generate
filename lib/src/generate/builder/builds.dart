@@ -30,6 +30,9 @@ class RouterTableBuilder implements Builder {
   final BuilderOptions _options;
   late final Set<String> _splitModules = _resolveSplitModules(_options);
 
+  /// 同一次 build 中若曾对非入口文件报错，则不再写入任何输出。
+  static bool _sawNonEntryFileInThisRun = false;
+
   @override
   Map<String, List<String>> get buildExtensions => {
     '.dart': ['.g.dart', for (final m in _splitModules) '_$m.g.dart'],
@@ -44,8 +47,16 @@ targets:
       fluro_router_generate|router_library:
         generate_for:
           include:
-            - lib/router/router_config.dart''';
+            - lib/**/**.dart
 
+  请修正 build.yaml 后再重新运行。''';
+
+  static String _configError(String inputPath) =>
+      '【生成已终止】未在 build.yaml 的 generate_for.include 中指定路由入口文件，'
+      '或当前输入 $inputPath 不是带 @EntranceAnnotation 的入口文件。'
+      '必须配置 include 仅包含入口文件，否则报错并立即终止，且不写入任何 .g.dart。$_configHint';
+
+  /// 未配置或未在 include 中指定入口文件时：报错并立即终止，不写入任何文件。
   @override
   Future<void> build(BuildStep buildStep) async {
     final outputs = await generateRouterTableContent(
@@ -53,10 +64,11 @@ targets:
       allowedSplitModules: _splitModules,
     );
     if (outputs.isEmpty) {
-      throw BuildException(
-        'fluro_router_generate|router_library 仅允许对带 @EntranceAnnotation 的入口文件运行。'
-        '当前输入 ${buildStep.inputId.path} 未标注入口注解。$_configHint',
-      );
+      _sawNonEntryFileInThisRun = true;
+      throw BuildException(_configError(buildStep.inputId.path));
+    }
+    if (_sawNonEntryFileInThisRun) {
+      throw BuildException(_configError(buildStep.inputId.path));
     }
 
     final package = buildStep.inputId.package;

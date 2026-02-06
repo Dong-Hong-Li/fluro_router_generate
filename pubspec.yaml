@@ -1,8 +1,8 @@
 name: fluro_router_generate
-description: A powerful Flutter routing library with animated transitions, route matching, and custom navigation support.
+description: A powerful Flutter library for routing based on Fluro, featuring annotations and code generation, with animated transitions, route matching, and support for custom navigation.
 version: 1.0.0
-publish_to: 'none'
-
+repository: https://github.com/Dong-Hong-Li/fluro_router_generate
+homepage: https://github.com/Dong-Hong-Li/fluro_router_generate
 environment:
   sdk: ^3.8.1
   flutter: ">=3.0.0"
@@ -19,6 +19,7 @@ dependencies:
   source_gen: ^4.2.0
 
   # 构建器
+  build: ^4.0.0
   build_runner: ^2.10.5
   glob: ^2.0.0
 
@@ -27,3 +28,5 @@ dependencies:
 
 dev_dependencies:
   path: ^1.9.0
+  crypto: ^3.0.0
+  package_config: ^2.2.0

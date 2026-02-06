@@ -1,2 +1,4 @@
 # 所有代码生成文件不提交
 **/*.g.dart
+.DS_Store
+.dart_tool/
