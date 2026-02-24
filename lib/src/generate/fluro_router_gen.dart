@@ -668,86 +668,88 @@ Future<List<_RouteEntry>> _collectAnnotatedRoutes(BuildStep buildStep) async {
 
     /// 遍历当前类库中的所有类
     for (final ClassElement element in lib.classes) {
-      // 检查类是否带有 [RouterAnnotation] 注解，如果类不带有 [RouterAnnotation] 注解，则跳过
-      final annotation = _annotationChecker.firstAnnotationOf(element);
-      if (annotation == null) continue;
-
-      // 获取注解中的路径如果路径为空，则跳过
-      final reader = ConstantReader(annotation);
-      final path = reader.read('path').stringValue;
-      if (path.isEmpty) continue;
+      // 收集该类上所有 [RouterAnnotation] 注解，没有则跳过
+      final annotations = _annotationChecker.annotationsOf(element);
+      if (annotations.isEmpty) continue;
 
       // 获取类名如果类名为空，则跳过
       final className = element.name;
       if (className == null || className.isEmpty) continue;
 
-      // 获取传入参数的类型
-      final constructorParams = _readConstructorParams(reader);
+      for (final annotation in annotations) {
+        // 获取注解中的路径如果路径为空，则跳过
+        final reader = ConstantReader(annotation);
+        final path = reader.read('path').stringValue;
+        if (path.isEmpty) continue;
 
-      // 获取传入参数的 (键、默认值、类型)
-      var (paramKeys, paramDefaults, paramTypes) = _readDefaultParamsMap(
-        reader,
-      );
+        // 获取传入参数的类型
+        final constructorParams = _readConstructorParams(reader);
 
-      // 当使用 routeSettingsArguments 时：以构造函数参数为传参列表，defaultParams 只提供默认值/类型
-      // 这样写 defaultParams: {count: 0} 时仍会生成 title、count 两个参数，仅 count 有默认值
-      if (constructorParams == 'routeSettingsArguments') {
-        final inferredKeys = _getRouteSettingsParamKeys(element);
-        if (inferredKeys.isNotEmpty) {
-          final defaultByKey = <String, ({String def, String typ})>{};
-          for (
-            var i = 0;
-            i < paramKeys.length &&
-                i < paramDefaults.length &&
-                i < paramTypes.length;
-            i++
-          ) {
-            defaultByKey[paramKeys[i]] = (
-              def: paramDefaults[i],
-              typ: paramTypes[i],
-            );
+        // 获取传入参数的 (键、默认值、类型)
+        var (paramKeys, paramDefaults, paramTypes) = _readDefaultParamsMap(
+          reader,
+        );
+
+        // 当使用 routeSettingsArguments 时：以构造函数参数为传参列表，defaultParams 只提供默认值/类型
+        // 这样写 defaultParams: {count: 0} 时仍会生成 title、count 两个参数，仅 count 有默认值
+        if (constructorParams == 'routeSettingsArguments') {
+          final inferredKeys = _getRouteSettingsParamKeys(element);
+          if (inferredKeys.isNotEmpty) {
+            final defaultByKey = <String, ({String def, String typ})>{};
+            for (
+              var i = 0;
+              i < paramKeys.length &&
+                  i < paramDefaults.length &&
+                  i < paramTypes.length;
+              i++
+            ) {
+              defaultByKey[paramKeys[i]] = (
+                def: paramDefaults[i],
+                typ: paramTypes[i],
+              );
+            }
+            paramKeys = inferredKeys;
+            paramDefaults = paramKeys
+                .map((k) => defaultByKey[k]?.def ?? '')
+                .toList();
+            paramTypes = paramKeys
+                .map((k) => defaultByKey[k]?.typ ?? 'string')
+                .toList();
           }
-          paramKeys = inferredKeys;
-          paramDefaults = paramKeys
-              .map((k) => defaultByKey[k]?.def ?? '')
-              .toList();
-          paramTypes = paramKeys
-              .map((k) => defaultByKey[k]?.typ ?? 'string')
-              .toList();
         }
+
+        // 当使用 routeSettingsArguments 时，从页面类构造函数读取参数真实类型
+        List<String> paramTypeNames = [];
+        List<String?> paramTypeImportUris = [];
+        if (constructorParams == 'routeSettingsArguments' &&
+            paramKeys.isNotEmpty) {
+          final r = _getConstructorParamTypes(element, paramKeys);
+          paramTypeNames = r.$1;
+          paramTypeImportUris = r.$2;
+        }
+
+        // 获取描述
+        final description = reader.peek('description')?.stringValue;
+
+        // 获取可选模块名（用于分组生成）
+        final module = reader.peek('module')?.stringValue;
+
+        entries.add(
+          _RouteEntry(
+            path: path,
+            className: className,
+            importUri: importUri,
+            constructorParams: constructorParams,
+            paramKeys: paramKeys,
+            paramDefaults: paramDefaults,
+            paramTypes: paramTypes,
+            paramTypeNames: paramTypeNames,
+            paramTypeImportUris: paramTypeImportUris,
+            description: description,
+            module: module,
+          ),
+        );
       }
-
-      // 当使用 routeSettingsArguments 时，从页面类构造函数读取参数真实类型
-      List<String> paramTypeNames = [];
-      List<String?> paramTypeImportUris = [];
-      if (constructorParams == 'routeSettingsArguments' &&
-          paramKeys.isNotEmpty) {
-        final r = _getConstructorParamTypes(element, paramKeys);
-        paramTypeNames = r.$1;
-        paramTypeImportUris = r.$2;
-      }
-
-      // 获取描述
-      final description = reader.peek('description')?.stringValue;
-
-      // 获取可选模块名（用于分组生成）
-      final module = reader.peek('module')?.stringValue;
-
-      entries.add(
-        _RouteEntry(
-          path: path,
-          className: className,
-          importUri: importUri,
-          constructorParams: constructorParams,
-          paramKeys: paramKeys,
-          paramDefaults: paramDefaults,
-          paramTypes: paramTypes,
-          paramTypeNames: paramTypeNames,
-          paramTypeImportUris: paramTypeImportUris,
-          description: description,
-          module: module,
-        ),
-      );
     }
   }
 

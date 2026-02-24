@@ -9,6 +9,13 @@ import 'package:fluro_router_generate/fluro_router.dart';
   defaultParams: {'userId': '0'},
   constructorParams: HandlerConstructorParams.pathParams,
 )
+@RouterAnnotation(
+  path: '/user2/:userId/post/:postId',
+  description: '帖子详情页2（多路径参数）',
+  module: 'demo',
+  defaultParams: {'userId': '0'},
+  constructorParams: HandlerConstructorParams.pathParams,
+)
 class PostPage extends StatelessWidget {
   const PostPage({super.key, required this.userId, required this.postId});
   final String userId;
