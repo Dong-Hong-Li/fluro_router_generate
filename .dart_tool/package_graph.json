@@ -8,6 +8,7 @@
       "version": "1.0.0",
       "dependencies": [
         "analyzer",
+        "build",
         "build_runner",
         "flutter",
         "flutter_lints",
@@ -15,7 +16,23 @@
         "source_gen"
       ],
       "devDependencies": [
+        "crypto",
+        "package_config",
         "path"
+      ]
+    },
+    {
+      "name": "package_config",
+      "version": "2.2.0",
+      "dependencies": [
+        "path"
+      ]
+    },
+    {
+      "name": "crypto",
+      "version": "3.0.7",
+      "dependencies": [
+        "typed_data"
       ]
     },
     {
@@ -79,6 +96,18 @@
       ]
     },
     {
+      "name": "build",
+      "version": "4.0.4",
+      "dependencies": [
+        "analyzer",
+        "crypto",
+        "glob",
+        "logging",
+        "package_config",
+        "path"
+      ]
+    },
+    {
       "name": "source_gen",
       "version": "4.2.0",
       "dependencies": [
@@ -121,6 +150,13 @@
         "meta",
         "sky_engine",
         "vector_math"
+      ]
+    },
+    {
+      "name": "typed_data",
+      "version": "1.4.0",
+      "dependencies": [
+        "collection"
       ]
     },
     {
@@ -226,13 +262,6 @@
       ]
     },
     {
-      "name": "package_config",
-      "version": "2.2.0",
-      "dependencies": [
-        "path"
-      ]
-    },
-    {
       "name": "mime",
       "version": "2.0.0",
       "dependencies": []
@@ -289,13 +318,6 @@
         "pub_semver",
         "source_span",
         "yaml"
-      ]
-    },
-    {
-      "name": "crypto",
-      "version": "3.0.7",
-      "dependencies": [
-        "typed_data"
       ]
     },
     {
@@ -357,18 +379,6 @@
         "json_annotation",
         "path",
         "pubspec_parse"
-      ]
-    },
-    {
-      "name": "build",
-      "version": "4.0.4",
-      "dependencies": [
-        "analyzer",
-        "crypto",
-        "glob",
-        "logging",
-        "package_config",
-        "path"
       ]
     },
     {
@@ -449,13 +459,6 @@
         "source_span",
         "string_scanner",
         "typed_data"
-      ]
-    },
-    {
-      "name": "typed_data",
-      "version": "1.4.0",
-      "dependencies": [
-        "collection"
       ]
     },
     {
