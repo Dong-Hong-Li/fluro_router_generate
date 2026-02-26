@@ -25,7 +25,7 @@ String _readConstructorParams(ConstantReader annotation) {
     final indexObj = cr.objectValue.getField('index');
     if (indexObj != null) {
       final i = indexObj.toIntValue();
-      if (i != null && i >= 0 && i < _constructorParamsNames.length) {
+       if (i != null && i >= 0 && i < _constructorParamsNames.length) {
         return _constructorParamsNames[i];
       }
     }
