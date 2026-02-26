@@ -166,7 +166,7 @@ class DetailPage extends StatelessWidget {
 
 ```dart
 @RouterAnnotation(
-  path: '/user/:userId/post/:postId',
+  path: '/user/:userId/post/:postId', 
   defaultParams: {'userId': '0', 'postId': '0'},
   constructorParams: HandlerConstructorParams.pathParams,
 )
@@ -288,3 +288,14 @@ Modules not in `split_modules` are inlined into the main generated file. See `ex
 - **Type follows the constructor type A**. The literal in defaultParams (B) only affects the default value, not how the value is parsed.
 - If A is an object type, generated code uses `argsMap?['key'] as A`, not B for int/double etc.
 - **Conclusion**: Constructor type **A** wins; defaultParams’ type B does not override A.
+
+---
+
+## Troubleshooting
+
+| Issue | What to check |
+|-------|----------------|
+| **build_runner fails** with a message about build.yaml | Ensure the **only** file in `generate_for.include` is your route entry file (the one with `@EntranceAnnotation`). Do not include every `.dart` file. |
+| **Route not found** at runtime | Call `RouteConfig.instance.initAllHandlers()` before `runApp()`, and use `onGenerateRoute: FluroConfig.router.generator` in `MaterialApp`. |
+| **Wrong or missing params** on the page | Match `constructorParams` to how you pass data: `pathParams` for `/path/:id`, `queryParams` for `?key=`, `routeSettingsArguments` for `RouteSettings.arguments`. Use `defaultParams` when you need defaults. |
+| **Generated file is empty or outdated** | Run `dart run build_runner build --delete-conflicting-outputs` again; ensure the entry file is the one listed in build.yaml and has `@EntranceAnnotation()`. |
