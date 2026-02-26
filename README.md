@@ -1,5 +1,10 @@
 # fluro_router_generate
 
+**Fluro-based routing for Flutter with annotations and code generation.**  
+Register routes automatically via `@RouterAnnotation`, with path params, query params, and `RouteSettings.arguments`. Supports animated transitions and custom navigation.
+
+---
+
 基于 Fluro 的路由库，通过注解 + 代码生成自动注册路由并支持路径参数、查询参数、RouteSettings.arguments 传参。
 
 ---

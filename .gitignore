@@ -1,6 +1,10 @@
-# 所有代码生成文件不提交
+# 代码生成
 **/*.g.dart
-.DS_Store
+build/
+
+# Dart/Flutter
 .dart_tool/
-.dart_tool
 pubspec.lock
+
+# 系统
+.DS_Store

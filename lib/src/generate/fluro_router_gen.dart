@@ -5,31 +5,8 @@ import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:glob/glob.dart';
 import 'package:fluro_router_generate/src/generate/annotation/router_annotation.dart';
+import 'package:fluro_router_generate/src/utils/path_parser.dart';
 import 'package:source_gen/source_gen.dart';
-
-/// 从 path 解析路径参数名：/home/:id → [id]，/user/:userId/post/:postId → [userId, postId]
-List<String> _pathParamNames(String path) {
-  final basePath = path.contains('?') ? path.split('?').first : path;
-  final segments = basePath.split('/');
-  final names = <String>[];
-  for (final s in segments) {
-    if (s.startsWith(':')) names.add(s.substring(1));
-  }
-  return names;
-}
-
-/// 从 path 解析查询参数名：/home?id=1&name=2 → [id, name]
-List<String> _queryParamNames(String path) {
-  if (!path.contains('?')) return [];
-  final query = path.split('?').last.split('#').first;
-  if (query.isEmpty) return [];
-  final names = <String>[];
-  for (final part in query.split('&')) {
-    final eq = part.indexOf('=');
-    if (eq > 0) names.add(part.substring(0, eq));
-  }
-  return names;
-}
 
 const List<String> _constructorParamsNames = [
   'none',
@@ -490,7 +467,7 @@ String _buildHandlerCall(_RouteEntry e) {
   final className = e.className;
 
   if (cp == 'pathParams') {
-    final names = _pathParamNames(e.path);
+    final names = pathParamNames(e.path);
     if (names.isEmpty)
       return 'FluroHandler(handlerFunc: (context, parameters) => $className())';
     final defaults = names.map((n) {
@@ -506,7 +483,7 @@ String _buildHandlerCall(_RouteEntry e) {
   }
 
   if (cp == 'queryParams') {
-    final pathNames = _queryParamNames(e.path);
+    final pathNames = queryParamNames(e.path);
     final names = pathNames.isNotEmpty ? pathNames : e.paramKeys;
     if (names.isEmpty)
       return 'FluroHandler(handlerFunc: (context, parameters) => $className())';
