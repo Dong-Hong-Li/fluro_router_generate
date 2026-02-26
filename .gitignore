@@ -2,3 +2,5 @@
 **/*.g.dart
 .DS_Store
 .dart_tool/
+.dart_tool
+pubspec.lock

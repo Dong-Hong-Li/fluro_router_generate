@@ -12,7 +12,7 @@ dependencies:
     sdk: flutter
     
   # 用于从 ClassElement 读取构造函数参数类型（^9.0.0 兼容 Flutter 的 meta 1.16.0，10.x 需 meta ^1.18.0）
-  analyzer: ^9.0.0
+  analyzer: ^8.0.0
 
 
   # 代码生成器
