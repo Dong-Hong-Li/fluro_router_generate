@@ -1,16 +1,29 @@
-# example
+# Example / 示例
 
-A new Flutter project.
+**English** | [中文](#中文)
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## English
 
-A few resources to get you started if this is your first Flutter project:
+Demo app for **fluro_router_generate**. It shows:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Route entry with `@EntranceAnnotation` and `FluroConfig`
+- Pages with `@RouterAnnotation`: no params, path params, query params, `RouteSettings.arguments`
+- `build.yaml` with `generate_for.include` for the route entry only
+- Running `dart run build_runner build` and using `initAllHandlers()` in `main.dart`
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Run the app and use the list to navigate between sample routes.
+
+---
+
+## 中文
+
+**fluro_router_generate** 的示例工程，演示：
+
+- 使用 `@EntranceAnnotation` 和 `FluroConfig` 的路由入口
+- 使用 `@RouterAnnotation` 的页面：无参数、路径参数、查询参数、`RouteSettings.arguments`
+- 仅对路由入口配置 `generate_for.include` 的 `build.yaml`
+- 执行 `dart run build_runner build` 并在 `main.dart` 中调用 `initAllHandlers()`
+
+运行应用后可通过列表跳转各示例路由。

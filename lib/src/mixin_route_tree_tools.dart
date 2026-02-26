@@ -11,9 +11,9 @@ mixin RouteTreeTools {
   ///
   /// - `path`：需要标准化的路径
   List<String> normalizePath(String path) {
-    if (path == Navigator.defaultRouteName) return ["/"];
-    if (path.startsWith("/")) path = path.substring(1);
-    return path.split("/");
+    if (path == Navigator.defaultRouteName) return ['/'];
+    if (path.startsWith('/')) path = path.substring(1);
+    return path.split('/');
   }
 
   ///遍历同级节点,直到找到符合条件的节点路径,返回下一轮需要检查的节点集合
@@ -95,9 +95,9 @@ mixin RouteTreeTools {
 
   /// 根据路径组件的类型返回节点类型
   ///
-  /// - `component`：当前路径组件，例如 home、user、:id 等。
+  /// - `component`：当前路径组件，例如 home、user、`:id` 等。
   RouteTreeNodeType typeForComponent(String component) =>
-      component.startsWith(":")
+      component.startsWith(':')
       ? RouteTreeNodeType.parameter
       : RouteTreeNodeType.component;
 
@@ -114,14 +114,14 @@ mixin RouteTreeTools {
     final nodes = parent != null ? parent.nodes : rootNodes;
 
     for (final node in nodes) {
-      var indent = "";
+      var indent = '';
 
       for (var i = 0; i < level; i++) {
-        indent += "    ";
+        indent += '    ';
       }
 
       // ignore: avoid_print
-      print("$indent${node.part}: total routes=${node.routes.length}");
+      print('$indent${node.part}: total routes=${node.routes.length}');
 
       if (node.nodes.isNotEmpty) {
         printSubTree(rootNodes, parent: node, level: level + 1);

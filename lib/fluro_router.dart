@@ -2,7 +2,7 @@
 ///
 /// Provides animated route transitions, dynamic route matching,
 /// and custom navigation support.
-library fluro_router_generate;
+library;
 
 // Core exports
 // export 'src/fluro_router_generate.dart';

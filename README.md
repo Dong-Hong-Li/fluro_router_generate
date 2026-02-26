@@ -1,20 +1,19 @@
+[中文](README_zh.md) | **English**
+
+---
+
 # fluro_router_generate
 
-**Fluro-based routing for Flutter with annotations and code generation.**  
-Register routes automatically via `@RouterAnnotation`, with path params, query params, and `RouteSettings.arguments`. Supports animated transitions and custom navigation.
+Fluro-based routing for Flutter with **annotations and code generation**. Register routes automatically via `@RouterAnnotation`, with path params, query params, and `RouteSettings.arguments`. Supports animated transitions and custom navigation.
 
 ---
 
-基于 Fluro 的路由库，通过注解 + 代码生成自动注册路由并支持路径参数、查询参数、RouteSettings.arguments 传参。
-
----
-
-## 1. 依赖
+## 1. Dependencies
 
 ```yaml
 dependencies:
   fluro_router_generate:
-    path: ../  # 或 pub.dev 版本
+    path: ../  # or a version from pub.dev
 
 dev_dependencies:
   build_runner: ^2.10.5
@@ -22,9 +21,9 @@ dev_dependencies:
 
 ---
 
-## 2. 创建路由入口
+## 2. Create route entry
 
-在 `lib/xxxx.dart` 中：
+In `lib/xxxx.dart`:
 
 ```dart
 import 'package:fluro_router_generate/fluro_router_generate.dart';
@@ -39,13 +38,13 @@ class RouteConfig extends FluroConfig {
 
 ---
 
-## 3. 给页面加注解
+## 3. Annotate your pages
 
 ```dart
 import 'package:flutter/material.dart';
 import 'package:fluro_router_generate/fluro_router_generate.dart';
 
-@RouterAnnotation(path: '/home/:id', description: '首页', defaultParams: {'id': '-'})
+@RouterAnnotation(path: '/home/:id', description: 'Home', defaultParams: {'id': '-'})
 class HomePage extends StatelessWidget {
   const HomePage({super.key, required this.id});
   final String id;
@@ -59,39 +58,39 @@ class HomePage extends StatelessWidget {
 
 ---
 
-## 4. 配置 build.yaml（必须）
+## 4. Configure build.yaml (required)
 
-**使用方项目**根目录必须有 `build.yaml`，且**仅**对带 `@EntranceAnnotation` 的入口文件触发生成：
+Your **app project** must have a root `build.yaml`, and **only** the file with `@EntranceAnnotation` may trigger the builder:
 
 ```yaml
-# 仅对路由入口触发生成，生成 lib/router/router_config.g.dart
+# Only the route entry file triggers generation, e.g. lib/router/router_config.g.dart
 targets:
   $default:
     builders:
       fluro_router_generate|router_library:
         generate_for:
           include:
-            # 路径要和创建的路由入口一致
+            # Path must match your route entry file
             # - lib/router/router_config.dart
 ```
 
-- **未配置或未在 `include` 中指定入口文件时**：build_runner 默认会对**所有** `.dart` 触发生成器。对每个**非入口**文件（没有 `@EntranceAnnotation` 的），生成器会返回空内容，Builder 会**直接抛错**并提示配置 build.yaml，不会为该文件生成 `.g.dart`，整次 build 会失败。
-- 因此必须在 `include` 里**只**写上路由入口文件（带 `@EntranceAnnotation` 的那个），否则会报错。
-- 既没有在入口文件上加 `@EntranceAnnotation`，又未正确配置 build.yaml 时，运行 `build_runner` 也会报错。
+- **If you don’t set this or omit the entry from `include`**: build_runner will run the builder on **all** `.dart` files. For any file **without** `@EntranceAnnotation`, the builder returns empty output and **fails** with a message to configure build.yaml. The whole build will fail.
+- So you **must** list **only** the route entry file (the one with `@EntranceAnnotation`) in `include`.
+- If the entry file has no `@EntranceAnnotation` or build.yaml is wrong, `build_runner` will also fail.
 
 ---
 
-## 5. 生成路由表
+## 5. Generate route table
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-会生成 `router_config.g.dart`，内含 `generatedHandlers` 和 `initAllHandlers()`。
+This generates `router_config.g.dart` with `generatedHandlers` and `initAllHandlers()`.
 
 ---
 
-## 6. 在 main 里初始化并使用
+## 6. Initialize in main and use
 
 ```dart
 import 'package:fluro_router_generate/fluro_router_generate.dart';
@@ -105,40 +104,40 @@ void main() {
 // MaterialApp
 onGenerateRoute: FluroConfig.router.generator,
 
-// 跳转
+// Navigate
 FluroConfig.router.navigateTo(context, '/home/1');
 ```
 
 ---
 
-## 注解说明
+## Annotation reference
 
-| 字段 | 说明 |
-|------|------|
-| `path` | 路由路径，支持 `/home/:id`、`/search?keyword=` 等 |
-| `description` | 可选，生成列表中的注释 |
-| `defaultParams` | 可选，参数默认值，如 `{'id': '-', 'page': 1}` |
-| `constructorParams` | 可选，`pathParams` / `queryParams` / `routeSettingsArguments` / `none`，决定参数如何传入构造函数 |
-| `module` | 可选，模块名，用于分文件生成与分组；配合 build.yaml 的 `split_modules` 可拆成独立 `.g.dart` |
+| Field | Description |
+|-------|-------------|
+| `path` | Route path, e.g. `/home/:id`, `/search?keyword=` |
+| `description` | Optional, comment in generated list |
+| `defaultParams` | Optional, default values, e.g. `{'id': '-', 'page': 1}` |
+| `constructorParams` | Optional: `pathParams` / `queryParams` / `routeSettingsArguments` / `none` — how params are passed to the constructor |
+| `module` | Optional, module name for grouping/splitting; with build.yaml `split_modules` can emit a separate `.g.dart` |
 
-更多用法见 `example/`。
+See `example/` for more.
 
 ---
 
-## 案例
+## Examples
 
-### 1. 传参类型案例
+### 1. Parameter types
 
-| 场景 | path 示例 | constructorParams | 说明 |
-|------|-----------|-------------------|------|
-| 无参数 | `/home` | `none` | 不传参 |
-| 单路径参数 | `/detail/:id` | `pathParams` | 匹配 `/detail/99`，参数 `id` |
-| 多路径参数 | `/user/:userId/post/:postId` | `pathParams` | 匹配 `/user/1/post/2`，参数 `userId`、`postId` |
-| 查询参数 | `/search?keyword=&page=1` | `queryParams` | 匹配 `/search?keyword=test&page=2`，参数从 query 解析 |
-| routeSettings 有 defaultParams | `/pass-args` | `routeSettingsArguments` + `defaultParams: {'title': '默认', 'count': 0}` | 通过 `RouteSettings.arguments` 传参，未传时用默认值 |
-| routeSettings 无 defaultParams | `/pass-args-no-defaults` | `routeSettingsArguments`（不写 defaultParams） | 参数名从构造函数推断，适合临时传参 |
+| Scenario | path example | constructorParams | Notes |
+|----------|---------------|-------------------|-------|
+| No params | `/home` | `none` | No arguments |
+| Single path param | `/detail/:id` | `pathParams` | Matches `/detail/99`, param `id` |
+| Multiple path params | `/user/:userId/post/:postId` | `pathParams` | Matches `/user/1/post/2`, params `userId`, `postId` |
+| Query params | `/search?keyword=&page=1` | `queryParams` | Params from query string |
+| routeSettings with defaultParams | `/pass-args` | `routeSettingsArguments` + `defaultParams: {'title': 'Default', 'count': 0}` | Via `RouteSettings.arguments`, fallback to defaults |
+| routeSettings without defaultParams | `/pass-args-no-defaults` | `routeSettingsArguments` (no defaultParams) | Param names from constructor, for ad-hoc args |
 
-**无参数：**
+**No params:**
 
 ```dart
 @RouterAnnotation(path: '/home', constructorParams: HandlerConstructorParams.none)
@@ -148,7 +147,7 @@ class HomePage extends StatelessWidget {
 }
 ```
 
-**单路径参数：**
+**Single path param:**
 
 ```dart
 @RouterAnnotation(
@@ -163,7 +162,7 @@ class DetailPage extends StatelessWidget {
 }
 ```
 
-**多路径参数：**
+**Multiple path params:**
 
 ```dart
 @RouterAnnotation(
@@ -179,7 +178,7 @@ class PostPage extends StatelessWidget {
 }
 ```
 
-**查询参数：**
+**Query params:**
 
 ```dart
 @RouterAnnotation(
@@ -195,12 +194,12 @@ class SearchPage extends StatelessWidget {
 }
 ```
 
-**routeSettings.arguments 传参（有 defaultParams）：**
+**routeSettings.arguments (with defaultParams):**
 
 ```dart
 @RouterAnnotation(
   path: '/pass-args',
-  defaultParams: {'title': '默认标题', 'count': 0},
+  defaultParams: {'title': 'Default title', 'count': 0},
   constructorParams: HandlerConstructorParams.routeSettingsArguments,
 )
 class PassArgsPage extends StatelessWidget {
@@ -211,17 +210,17 @@ class PassArgsPage extends StatelessWidget {
 }
 ```
 
-### 2. 跳转与传参案例
+### 2. Navigation and passing arguments
 
 ```dart
-// 无参数
+// No params
 FluroConfig.push('/home', context: context);
 
-// 路径参数
+// Path params
 FluroConfig.push('/detail/99', context: context);
 FluroConfig.push('/user/1/post/2', context: context);
 
-// 查询参数
+// Query params
 FluroConfig.push('/search?keyword=test&page=1', context: context);
 
 // routeSettings.arguments
@@ -230,14 +229,14 @@ FluroConfig.push(
   context: context,
   routeSettings: RouteSettings(
     name: '/pass-args',
-    arguments: {'title': '传入标题', 'count': 42},
+    arguments: {'title': 'My title', 'count': 42},
   ),
 );
 ```
 
-### 3. 分文件与 module、split_modules 案例
+### 3. Modules and split_modules
 
-页面注解里加 `module`，同名模块会生成到同一块（或同一文件）：
+Add `module` to annotations; same module name is grouped (or written to a separate file):
 
 ```dart
 @RouterAnnotation(
@@ -256,7 +255,7 @@ class HomePage extends StatelessWidget { ... }
 class PaymentPage extends StatelessWidget { ... }
 ```
 
-若希望 `payment` 模块拆成独立文件 `router_config_payment.g.dart`，在**项目根目录** `build.yaml` 里为该 builder 增加 `split_modules`：
+To emit a separate file e.g. `router_config_payment.g.dart` for the `payment` module, add `split_modules` in your **project root** `build.yaml`:
 
 ```yaml
 targets:
@@ -272,20 +271,20 @@ targets:
             - admin
 ```
 
-未在 `split_modules`（及默认列表）中的 `module` 会合并到主文件内联，不会单独成文件。完整示例见 `example/`。
+Modules not in `split_modules` are inlined into the main generated file. See `example/` for a full sample.
 
 ---
 
-## 常见问题
+## FAQ
 
-### defaultParams 和构造函数，对参数名称哪个优先级高？
+### defaultParams vs constructor: which decides parameter names?
 
-- **参数名单与默认值**：由 **defaultParams** 决定。只有未写 `defaultParams`（或写空 `{}`）时，才用**构造函数**推断参数名。
-- **参数类型**：名单确定后，类型始终从**构造函数**读取。
-- 因此：**defaultParams 优先级更高**（决定传哪几个参数、默认值）；构造函数用于在未写 defaultParams 时补全名单，并始终提供类型。
+- **Parameter set and defaults**: **defaultParams** wins. Only when `defaultParams` is omitted (or `{}`) are names inferred from the **constructor**.
+- **Types**: After the set is fixed, types always come from the **constructor**.
+- So **defaultParams** has priority for which params and defaults; the constructor is used when defaultParams is missing and always for types.
 
-### 构造函数类型是 A，但 defaultParams 里写的是类型 B，以谁为准？
+### Constructor type is A, defaultParams value looks like type B. Which type is used?
 
-- **类型以构造函数类型 A 为准**；defaultParams 的字面类型 B 只影响默认值，不改变「按什么类型解析」。
-- 若 A 是对象类型，生成代码一定是 `argsMap?['key'] as A`，不会用 B 做 int/double 等解析。
-- 结论：**构造函数类型 A 优先级更高**；defaultParams 的类型 B 不会覆盖 A。
+- **Type follows the constructor type A**. The literal in defaultParams (B) only affects the default value, not how the value is parsed.
+- If A is an object type, generated code uses `argsMap?['key'] as A`, not B for int/double etc.
+- **Conclusion**: Constructor type **A** wins; defaultParams’ type B does not override A.

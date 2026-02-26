@@ -25,7 +25,7 @@ class FluroRouteMatch {
   FluroRouteMatch({
     this.matchType = RouteMatchType.noMatch,
     this.route,
-    this.errorMessage = "",
+    this.errorMessage = '',
   });
 
   /// 匹配成功的路由对象,如果没有匹配到路由，则该值为 null。

@@ -18,7 +18,7 @@ class FluroRouteStorager with RouteTreeTools {
 
     // 处理根路径
     if (path == Navigator.defaultRouteName) {
-      if (_hasDefaultRoute) throw ("Default route was already defined");
+      if (_hasDefaultRoute) throw ('Default route was already defined');
       final node = RouteTreeNode(path, RouteTreeNodeType.component)
         ..routes = [routeData];
       _nodes.add(node);
@@ -26,7 +26,7 @@ class FluroRouteStorager with RouteTreeTools {
       return;
     }
 
-    if (path.startsWith("/")) path = path.substring(1);
+    if (path.startsWith('/')) path = path.substring(1);
     final pathComponents = path.split('/');
 
     // 逐层构建路由树（只使用路径部分，不含 query string，以便与 matchRoute 一致）
@@ -65,8 +65,8 @@ class FluroRouteStorager with RouteTreeTools {
     for (var pathFragment in pathComponents) {
       /// 保存当前路径片段中解析出来的查询参数
       Map<String, List<String>>? queryMap;
-      if (pathFragment.contains("?")) {
-        final splitParam = pathFragment.split("?");
+      if (pathFragment.contains('?')) {
+        final splitParam = pathFragment.split('?');
         pathFragment = splitParam[0];
         queryMap = parseQueryString(splitParam[1]);
       }

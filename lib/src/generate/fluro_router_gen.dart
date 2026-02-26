@@ -84,7 +84,7 @@ _getConstructorParamTypes(ClassElement classElement, List<String> paramKeys) {
       continue;
     }
     final dartType = p.type;
-    typeNames.add(dartType.getDisplayString(withNullability: true));
+    typeNames.add(dartType.getDisplayString());
 
     String? uri;
     if (dartType is InterfaceType) {
@@ -225,9 +225,10 @@ Future<GeneratedOutputs> generateRouterTableContent(
     "import 'package:fluro_router_generate/fluro_router.dart';",
   );
   for (final moduleName in splitModuleNames) {
-    final suffix = _moduleToGetterSuffix(moduleName);
+    final prefix = _moduleToLibraryPrefix(moduleName);
+    // final suffix = _moduleToGetterSuffix(moduleName);
     final partUri = _moduleFileImportUri(package, basePath, moduleName);
-    mainBuffer.writeln("import '$partUri' as _m$suffix;");
+    mainBuffer.writeln("import '$partUri' as $prefix;");
   }
   if (inlineModules.isNotEmpty) {
     final uris = <String>{};
@@ -368,8 +369,9 @@ void _writeExtensionMergeOnly(
   buffer.writeln('  /// 由 fluro_router_generate 生成的 RouterHandler 列表（各模块合并）。');
   buffer.writeln('  List<RouterHandler> get generatedHandlers => [');
   for (final moduleName in splitModuleNames) {
+    final prefix = _moduleToLibraryPrefix(moduleName);
     final suffix = _moduleToGetterSuffix(moduleName);
-    buffer.writeln('    ..._m$suffix.routeHandlers$suffix,');
+    buffer.writeln('    ...$prefix.routeHandlers$suffix,');
   }
   for (final moduleName in inlineModuleNames) {
     final suffix = _moduleToGetterSuffix(moduleName);
@@ -389,7 +391,7 @@ void _writeExtensionMergeOnly(
 }
 
 /// 扫描全包（findAssets + libraryFor）收集带 [RouterAnnotation] 的类，
-/// 生成独立库：imports + List<RouterHandler> get generatedHandlers。
+/// 生成独立库：imports + `List<RouterHandler>` get generatedHandlers。
 /// 无需任何入口文件或 lib/routers/，由 lib/main.dart 触发生成即可。
 /// 仅当通过 [RouterTableBuilder] 多文件输出时使用；单文件 Generator 已不推荐。
 class FluroRouterLibraryGenerator extends Generator {
@@ -468,8 +470,9 @@ String _buildHandlerCall(_RouteEntry e) {
 
   if (cp == 'pathParams') {
     final names = pathParamNames(e.path);
-    if (names.isEmpty)
+    if (names.isEmpty) {
       return 'FluroHandler(handlerFunc: (context, parameters) => $className())';
+    }
     final defaults = names.map((n) {
       final i = e.paramKeys.indexOf(n);
       return i >= 0 && i < e.paramDefaults.length ? e.paramDefaults[i] : '';
@@ -477,16 +480,17 @@ String _buildHandlerCall(_RouteEntry e) {
     final args = List.generate(names.length, (i) {
       final n = names[i];
       final d = defaults[i].replaceAll("'", "\\'");
-      return "$n: parameters['$n']?.first ?? '$d'";
+      return '$n: parameters[\'$n\']?.first ?? \'$d\'';
     }).join(', ');
-    return "FluroHandler(handlerFunc: (context, parameters) => $className($args))";
+    return 'FluroHandler(handlerFunc: (context, parameters) => $className($args))';
   }
 
   if (cp == 'queryParams') {
     final pathNames = queryParamNames(e.path);
     final names = pathNames.isNotEmpty ? pathNames : e.paramKeys;
-    if (names.isEmpty)
+    if (names.isEmpty) {
       return 'FluroHandler(handlerFunc: (context, parameters) => $className())';
+    }
     final defaults = names.map((n) {
       final i = e.paramKeys.indexOf(n);
       return i >= 0 && i < e.paramDefaults.length ? e.paramDefaults[i] : '';
@@ -494,14 +498,15 @@ String _buildHandlerCall(_RouteEntry e) {
     final args = List.generate(names.length, (i) {
       final n = names[i];
       final d = defaults[i].replaceAll("'", "\\'");
-      return "$n: parameters['$n']?.first ?? '$d'";
+      return '$n: parameters[\'$n\']?.first ?? \'$d\'';
     }).join(', ');
-    return "FluroHandler(handlerFunc: (context, parameters) => $className($args))";
+    return 'FluroHandler(handlerFunc: (context, parameters) => $className($args))';
   }
 
   if (cp == 'routeSettingsArguments') {
-    if (e.paramKeys.isEmpty)
+    if (e.paramKeys.isEmpty) {
       return 'FluroHandler(handlerFunc: (context, parameters) => $className())';
+    }
     const indent = '      ';
     final sb = StringBuffer();
     sb.writeln('FluroHandler(handlerFunc: (context, parameters) {');
@@ -556,6 +561,13 @@ String _moduleToGetterSuffix(String module) {
   final clean = module.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
   if (clean.isEmpty) return 'Default';
   return clean.substring(0, 1).toUpperCase() + clean.substring(1).toLowerCase();
+}
+
+/// 将 module 名转为合法的库 import 前缀（lower_case_with_underscores，无下划线开头）
+String _moduleToLibraryPrefix(String module) {
+  final clean = module.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
+  if (clean.isEmpty) return 'part_default';
+  return 'part_${clean.toLowerCase()}';
 }
 
 /// 写入 extension X on ConfigClass { 按 module 分组的路由 getter；generatedHandlers；initAllHandlers }

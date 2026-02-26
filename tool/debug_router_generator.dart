@@ -5,6 +5,8 @@
 // 运行: dart run tool/debug_router_generator.dart
 // 或用 VS Code/Cursor 选择 "Debug router_generator" 启动配置进行调试
 
+// ignore_for_file: avoid_print
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';

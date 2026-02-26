@@ -145,7 +145,7 @@ class FluroRouter with FluroRouterTools {
     Future future = completer.future;
 
     if (routeMatch.matchType == RouteMatchType.nonVisual) {
-      completer.complete("非视觉路由类型。");
+      completer.complete('非视觉路由类型。');
     } else {
       // 如果没有匹配到路由，并且存在未定义路由的处理函数（notFoundHandler），
       if (route == null && notFoundHandler != null) {
@@ -164,7 +164,7 @@ class FluroRouter with FluroRouterTools {
       } else if (route == null && notFoundHandler == null) {
         completer.completeError(
           RouteNotFoundException(
-            "No matching route was found. Procedure",
+            'No matching route was found. Procedure',
             path,
           ),
         );
@@ -229,7 +229,7 @@ class FluroRouter with FluroRouterTools {
     if (match?.route == null) {
       FluroRouteMatch(
         matchType: RouteMatchType.noMatch,
-        errorMessage: "未找到匹配的路由",
+        errorMessage: '未找到匹配的路由',
       );
     }
 
@@ -242,7 +242,7 @@ class FluroRouter with FluroRouterTools {
     if (handler == null) {
       return FluroRouteMatch(
         matchType: RouteMatchType.noMatch,
-        errorMessage: "未找到匹配的路由且未设置 notFoundHandler",
+        errorMessage: '未找到匹配的路由且未设置 notFoundHandler',
       );
     }
 
