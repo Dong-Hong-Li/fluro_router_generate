@@ -2,6 +2,22 @@
 
 ---
 
+## 1.1.3
+
+**English**
+
+- **Route guard suspend**: Hang navigation with [Completer]; call [FluroConfig.resumePendingRoute] to continue (with correct return value) or [FluroConfig.clearPendingRoute] to end. Supports multiple guards and multiple suspend/resume rounds.
+- **Fix**: `Future<dynamic>` is no longer cast to `Future<T?>`; use `.then<T?>((v) => v as T?)` so `push<T>` returns the correct type and avoids runtime cast errors.
+- **Docs**: Removed business-specific wording from `lib/src` comments; kept only API/mechanism descriptions.
+
+**中文**
+
+- **路由守卫挂起**：使用 [Completer] 挂起本次跳转的 Future；通过 [FluroConfig.resumePendingRoute] 恢复（可正确带回返回值）或 [FluroConfig.clearPendingRoute] 结束。支持多守卫、多轮挂起/恢复。
+- **修复**：不再将 `Future<dynamic>` 强转为 `Future<T?>`，改为 `.then<T?>((v) => v as T?)`，避免 `push<T>` 运行时类型转换错误。
+- **文档**：去除 `lib/src` 中业务相关注释，仅保留 API/机制说明。
+
+---
+
 ## 1.1.2
 
 **English**

@@ -19,7 +19,7 @@
 
 ```yaml
 dependencies:
-  fluro_router_generate: ^1.1.2  # 或 path: ../ 本地开发
+  fluro_router_generate: ^1.1.3  # 或 path: ../ 本地开发
 
 dev_dependencies:
   build_runner: ^2.10.5
@@ -118,32 +118,48 @@ FluroConfig.router.navigateTo(context, '/home/1');
 
 ## 7. 路由守卫（可选）
 
-守卫在每次**执行 [Navigator.push] 之前**运行，可放行、重定向或取消本次跳转，与仅能事后回调的 [NavigatorObserver] 互补。
+守卫在每次**执行 [Navigator.push] 之前**运行，可放行、重定向、取消或**挂起**本次跳转，与仅能事后回调的 [NavigatorObserver] 互补。
 
-```dart
-import 'package:fluro_router_generate/fluro_router.dart';
+**守卫返回值**
 
-// 例如：未登录访问 /admin 时重定向到登录页
-FluroConfig.addGuard((ctx) async {
-  if (ctx.path.startsWith('/admin') && !isLoggedIn()) {
-    return GuardResult.redirect('/login');
-  }
-  return GuardResult.allow;
-});
+| 返回值 | 说明 |
+|--------|------|
+| `GuardResult.allow` | 继续本次跳转。 |
+| `GuardResult.redirect(newPath)` | 改为跳转到 `newPath`（会再次经过守卫）。最多 5 次以防死循环。 |
+| `GuardResult.cancel` | 取消本次跳转；调用方 `await push` 得到 `null`。 |
+| `GuardResult.suspend` | **挂起**本次跳转（`push` 的 Future 暂不结束）。先执行自定义流程（如打开其他页），满足条件后调用 `resumePendingRoute(context)` 继续到原目标，或调用 `clearPendingRoute()` 结束挂起（调用方得到 `null`）。恢复后的跳转仍会经过守卫；目标页的返回值会传回最初的 `await push<T>`。 |
 
-// 需要时移除或清空
-FluroConfig.removeGuard(myGuard);
-FluroConfig.clearGuards();
-```
+**API**
 
 | API | 说明 |
 |-----|------|
 | `addGuard(guard)` | 追加守卫，按注册顺序执行。 |
-| `insertGuard(index, guard)` | 在指定索引插入守卫。 |
-| `removeGuard(guard)` | 按引用移除第一个匹配的守卫。 |
-| `clearGuards()` | 清空所有守卫。 |
+| `hasPendingRoute` | 当前是否存在被挂起的跳转。 |
+| `resumePendingRoute<T>(context)` | 继续执行被挂起的跳转；无挂起则 no-op。执行后自动清除挂起状态。 |
+| `clearPendingRoute()` | 结束挂起（调用方 Future 以 `null` 完成）。 |
 
-守卫返回值：`GuardResult.allow`、`GuardResult.redirect(newPath)`、`GuardResult.cancel`。重定向最多 5 次以防死循环。
+**示例：allow / redirect / suspend**
+
+```dart
+import 'package:fluro_router_generate/fluro_router.dart';
+
+FluroConfig.addGuard((ctx) async {
+  if (ctx.path.startsWith('/admin') && !hasAccess()) {
+    return GuardResult.redirect('/welcome');  // 替换路径
+  }
+  return GuardResult.allow;
+});
+
+// 挂起：先不跳转，执行自定义流程后再恢复或清除
+FluroConfig.addGuard((ctx) async {
+  if (ctx.path == '/premium' && !isUnlocked()) {
+    // 例如先打开付费页，成功后：FluroConfig.resumePendingRoute(context);
+    // 取消时：FluroConfig.clearPendingRoute();
+    return GuardResult.suspend;
+  }
+  return GuardResult.allow;
+});
+```
 
 ---
 

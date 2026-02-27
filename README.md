@@ -20,7 +20,7 @@ Register routes automatically via `@RouterAnnotation`, with path params, query p
 
 ```yaml
 dependencies:
-  fluro_router_generate: ^1.1.2  # or path: ../ for local
+  fluro_router_generate: ^1.1.3  # or path: ../ for local
 
 dev_dependencies:
   build_runner: ^2.10.5
@@ -119,32 +119,50 @@ FluroConfig.router.navigateTo(context, '/home/1');
 
 ## 7. Route guards (optional)
 
-Guards run **before** each `Navigator.push`, so you can allow, redirect, or cancel navigation. This is different from `NavigatorObserver`, which only runs after push/pop.
+Guards run **before** each `Navigator.push`, so you can allow, redirect, cancel, or **suspend** navigation. This is different from `NavigatorObserver`, which only runs after push/pop.
 
-```dart
-import 'package:fluro_router_generate/fluro_router.dart';
+**Guard results**
 
-// e.g. redirect to login when visiting /admin without auth
-FluroConfig.addGuard((ctx) async {
-  if (ctx.path.startsWith('/admin') && !isLoggedIn()) {
-    return GuardResult.redirect('/login');
-  }
-  return GuardResult.allow;
-});
+| Result | Description |
+|--------|-------------|
+| `GuardResult.allow` | Continue with the current navigation. |
+| `GuardResult.redirect(newPath)` | Navigate to `newPath` instead (re-runs guards). Limited to 5 hops. |
+| `GuardResult.cancel` | Abort this navigation; caller's `await push` resolves to `null`. |
+| `GuardResult.suspend` | Pause this navigation (the `push` Future is held). Run your own flow (e.g. another screen), then call `resumePendingRoute(context)` to continue to the original target, or `clearPendingRoute()` to end the pause (caller gets `null`). The resumed navigation still goes through guards; return value from the target page is passed back to the original `await push<T>`. |
 
-// Remove or clear when needed
-FluroConfig.removeGuard(myGuard);
-FluroConfig.clearGuards();
-```
+**APIs**
 
 | API | Description |
 |-----|-------------|
 | `addGuard(guard)` | Append a guard (runs in order). |
-| `insertGuard(index, guard)` | Insert at index. |
-| `removeGuard(guard)` | Remove first matching guard by reference. |
-| `clearGuards()` | Remove all guards. |
+| `hasPendingRoute` | Whether a navigation is currently suspended. |
+| `resumePendingRoute<T>(context)` | Continue the suspended navigation; no-op if none. Clears the pending state after use. |
+| `clearPendingRoute()` | End the suspended navigation (caller's Future completes with `null`). |
 
-Guard returns: `GuardResult.allow`, `GuardResult.redirect(newPath)`, `GuardResult.cancel`. Redirect is limited to 5 hops to avoid loops.
+**Example: allow vs redirect vs suspend**
+
+```dart
+import 'package:fluro_router_generate/fluro_router.dart';
+
+FluroConfig.addGuard((ctx) async {
+  if (ctx.path.startsWith('/admin') && !hasAccess()) {
+    return GuardResult.redirect('/welcome');  // replace path
+  }
+  return GuardResult.allow;
+});
+
+// Suspend: hold the navigation, run your flow, then resume or clear
+FluroConfig.addGuard((ctx) async {
+  if (ctx.path == '/premium' && !isUnlocked()) {
+    // e.g. push a paywall, then on success:
+    //   FluroConfig.resumePendingRoute(context);
+    // on cancel:
+    //   FluroConfig.clearPendingRoute();
+    return GuardResult.suspend;
+  }
+  return GuardResult.allow;
+});
+```
 
 ---
 
