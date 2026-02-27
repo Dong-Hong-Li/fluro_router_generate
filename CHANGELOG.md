@@ -2,6 +2,18 @@
 
 ---
 
+## 1.1.2
+
+**English**
+
+- Version bump; documentation and dependency examples updated to 1.1.2.
+
+**中文**
+
+- 版本号与文档、示例依赖更新至 1.1.2。
+
+---
+
 ## 1.1.0
 
 **English**

@@ -1,4 +1,4 @@
-[中文](README_zh.md) | **English**
+[中文](https://github.com/Dong-Hong-Li/fluro_router_generate/blob/main/README_zh.md) | **English**
 
 ---
 
@@ -8,7 +8,11 @@
 # fluro_router_generate
 
 Fluro-based routing for Flutter with **annotations and code generation**.  
-Repository: [GitHub](https://github.com/lidonghonglalala/fluro_router_generate) · Mirror: [Gitee](https://gitee.com/lidonghonglalala/fluro_router_generate) Register routes automatically via `@RouterAnnotation`, with path params, query params, and `RouteSettings.arguments`. Supports animated transitions and custom navigation.
+Register routes automatically via `@RouterAnnotation`, with path params, query params, and `RouteSettings.arguments`. Supports animated transitions and custom navigation.
+
+**Repositories (same project, two remotes):**  
+- **GitHub:** [github.com/Dong-Hong-Li/fluro_router_generate](https://github.com/Dong-Hong-Li/fluro_router_generate) — `git clone https://github.com/Dong-Hong-Li/fluro_router_generate.git`  
+- **Gitee:** [gitee.com/lidonghonglalala/fluro_router_generate](https://gitee.com/lidonghonglalala/fluro_router_generate) — `git clone https://gitee.com/lidonghonglalala/fluro_router_generate.git`
 
 ---
 
@@ -16,7 +20,7 @@ Repository: [GitHub](https://github.com/lidonghonglalala/fluro_router_generate) 
 
 ```yaml
 dependencies:
-  fluro_router_generate: ^1.1.0  # or path: ../ for local
+  fluro_router_generate: ^1.1.2  # or path: ../ for local
 
 dev_dependencies:
   build_runner: ^2.10.5

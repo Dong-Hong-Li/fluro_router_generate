@@ -1,4 +1,4 @@
-[English](README.md) | **中文**
+[English](https://github.com/Dong-Hong-Li/fluro_router_generate/blob/main/README.md) | **中文**
 
 ---
 
@@ -7,8 +7,11 @@
 
 # fluro_router_generate
 
-基于 Fluro 的路由库，通过**注解 + 代码生成**自动注册路由。  
-仓库：[GitHub](https://github.com/lidonghonglalala/fluro_router_generate) · 镜像：[Gitee](https://gitee.com/lidonghonglalala/fluro_router_generate)支持路径参数、查询参数、RouteSettings.arguments 传参，支持动画转场与自定义导航。
+基于 Fluro 的路由库，通过**注解 + 代码生成**自动注册路由，支持路径参数、查询参数、RouteSettings.arguments 传参，支持动画转场与自定义导航。
+
+**仓库：**  
+- **GitHub：** [github.com/Dong-Hong-Li/fluro_router_generate](https://github.com/Dong-Hong-Li/fluro_router_generate) — `git clone https://github.com/Dong-Hong-Li/fluro_router_generate.git`  
+- **Gitee：** [gitee.com/lidonghonglalala/fluro_router_generate](https://gitee.com/lidonghonglalala/fluro_router_generate) — `git clone https://gitee.com/lidonghonglalala/fluro_router_generate.git`
 
 ---
 
@@ -16,7 +19,7 @@
 
 ```yaml
 dependencies:
-  fluro_router_generate: ^1.1.0  # 或 path: ../ 本地开发
+  fluro_router_generate: ^1.1.2  # 或 path: ../ 本地开发
 
 dev_dependencies:
   build_runner: ^2.10.5
