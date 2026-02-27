@@ -1,8 +1,16 @@
 name: fluro_router_generate
 description: A powerful Flutter library for routing based on Fluro, featuring annotations and code generation, with animated transitions, route matching, and support for custom navigation.
-version: 1.1.0
-repository: https://gitee.com/lidonghonglalala/fluro_router_generate
-homepage: https://gitee.com/lidonghonglalala/fluro_router_generate 
+version: 1.1.1
+repository: https://github.com/lidonghonglalala/fluro_router_generate
+homepage: https://github.com/lidonghonglalala/fluro_router_generate
+documentation: https://github.com/lidonghonglalala/fluro_router_generate#readme
+# 分类标签，便于搜索与展示
+topics:
+  - flutter
+  - routing
+  - code-generation
+  - fluro
+  - annotations
 environment:
   sdk: ^3.8.1
   flutter: ">=3.0.0"
@@ -11,7 +19,7 @@ dependencies:
   flutter:
     sdk: flutter
     
-  # 用于从 ClassElement 读取构造函数参数类型（^9.0.0 兼容 Flutter 的 meta 1.16.0，10.x 需 meta ^1.18.0）
+  # 用于从 ClassElement 
   analyzer: ^8.0.0
 
 

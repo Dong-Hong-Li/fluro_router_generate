@@ -2,9 +2,13 @@
 
 ---
 
+[![pub package](https://img.shields.io/pub/v/fluro_router_generate.svg)](https://pub.dev/packages/fluro_router_generate)
+[![License](https://img.shields.io/badge/license-Artistic%202.0-blue.svg)](LICENSE)
+
 # fluro_router_generate
 
-基于 Fluro 的路由库，通过**注解 + 代码生成**自动注册路由，支持路径参数、查询参数、RouteSettings.arguments 传参，支持动画转场与自定义导航。
+基于 Fluro 的路由库，通过**注解 + 代码生成**自动注册路由。  
+仓库：[GitHub](https://github.com/lidonghonglalala/fluro_router_generate) · 镜像：[Gitee](https://gitee.com/lidonghonglalala/fluro_router_generate)支持路径参数、查询参数、RouteSettings.arguments 传参，支持动画转场与自定义导航。
 
 ---
 
@@ -12,8 +16,7 @@
 
 ```yaml
 dependencies:
-  fluro_router_generate:
-    path: ../  # 或 pub.dev 版本
+  fluro_router_generate: ^1.1.0  # 或 path: ../ 本地开发
 
 dev_dependencies:
   build_runner: ^2.10.5

@@ -2,9 +2,13 @@
 
 ---
 
+[![pub package](https://img.shields.io/pub/v/fluro_router_generate.svg)](https://pub.dev/packages/fluro_router_generate)
+[![License](https://img.shields.io/badge/license-Artistic%202.0-blue.svg)](LICENSE)
+
 # fluro_router_generate
 
-Fluro-based routing for Flutter with **annotations and code generation**. Register routes automatically via `@RouterAnnotation`, with path params, query params, and `RouteSettings.arguments`. Supports animated transitions and custom navigation.
+Fluro-based routing for Flutter with **annotations and code generation**.  
+Repository: [GitHub](https://github.com/lidonghonglalala/fluro_router_generate) · Mirror: [Gitee](https://gitee.com/lidonghonglalala/fluro_router_generate) Register routes automatically via `@RouterAnnotation`, with path params, query params, and `RouteSettings.arguments`. Supports animated transitions and custom navigation.
 
 ---
 
@@ -12,8 +16,7 @@ Fluro-based routing for Flutter with **annotations and code generation**. Regist
 
 ```yaml
 dependencies:
-  fluro_router_generate:
-    path: ../  # or a version from pub.dev
+  fluro_router_generate: ^1.1.0  # or path: ../ for local
 
 dev_dependencies:
   build_runner: ^2.10.5
