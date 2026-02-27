@@ -18,11 +18,14 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Print versions
+        run: flutter --version && dart --version
+
       - name: Install dependencies
         run: flutter pub get
 
       - name: Analyze
-        run: dart analyze
+        run: dart analyze --fatal-warnings --fatal-infos
 
       - name: Run tests
         run: flutter test
