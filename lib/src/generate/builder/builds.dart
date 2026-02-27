@@ -8,7 +8,7 @@ Builder buildRouter(BuilderOptions options) {
 }
 
 /// 从 [BuilderOptions] 解析「允许拆分为独立文件」的模块名，与 [defaultSplitModules] 合并。
-/// build.yaml 示例：builders: fluro_router_generate|router_library: options: { split_modules: [payment, admin] }
+/// build.yaml 示例：builders: fluro_router_generate|router_library: options: { split_modules: [featureA, featureB] }
 Set<String> _resolveSplitModules(BuilderOptions options) {
   final fromConfig = options.config['split_modules'];
   if (fromConfig == null) return defaultSplitModules;

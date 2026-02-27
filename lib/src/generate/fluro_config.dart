@@ -15,11 +15,21 @@ abstract class FluroConfig {
   }
 
   /// 注册路由守卫。守卫在每次 [push]/[navigateTo] 时、**执行 [Navigator.push] 之前** 按注册顺序执行，
-  /// 可返回 [GuardResult.allow]（放行）、[GuardResult.redirect]（重定向到新路径）或 [GuardResult.cancel]（取消跳转）。
+  /// 可返回 [GuardResult.allow]（放行）、[GuardResult.redirect]（重定向）、[GuardResult.cancel]（取消）、[GuardResult.suspend]（挂起）。
   /// 与 [NavigatorObserver] 不同，守卫用于跳转前拦截或重定向；Observer 仅能事后回调（didPush/didPop 等）。
   static void addGuard(RouteGuard guard) {
     router.guards.add(guard);
   }
+
+  /// 是否存在被挂起的路由（例如在守卫中返回 [GuardResult.suspend] 后可挂起，外部流程满足条件后用 [resumePendingRoute] 恢复）。
+  static bool get hasPendingRoute => router.hasPendingRoute;
+
+  /// 清除被挂起的路由意图（例如外部流程未通过时调用），当前页不变。
+  static void clearPendingRoute() => router.clearPendingRoute();
+
+  /// 使用 [context] 继续执行此前挂起的导航（例如外部流程满足条件后调用）；若无挂起则 no-op。执行后自动清除挂起意图。
+  static Future<T?> resumePendingRoute<T extends Object?>(BuildContext context) =>
+      router.resumePendingRoute<T>(context);
 
   /// 跳转边界路由是否清空堆栈
   set notFoundClearStack(bool value) {
@@ -38,7 +48,7 @@ abstract class FluroConfig {
   /// - `rootNavigator`：是否使用根导航器
   /// - `context`：上下文对象
   /// - `transition`：过渡效果
-  /// - `transitionDuration`：过渡时间
+  /// - `transitionDuration`：过渡时间 默认100ms
   /// - `transitionCurve`：过渡动画曲线
   /// - `transitionBuilder`：自定义过渡效果的构建器
   /// - `routeSettings`：路由设置a

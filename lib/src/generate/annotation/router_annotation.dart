@@ -64,7 +64,7 @@ class RouterAnnotation {
   ///
   /// ------------------------------------------------------------
   ///
-  /// FluroConfig.push('/home', context: context, routeSettings: RouteSettings(name: '/home', arguments: {'name': '张三'}));
+  /// FluroConfig.push('/home', context: context, routeSettings: RouteSettings(name: '/home', arguments: {'name': 'Alice'}));
   ///
   /// 如果 constructorParams 为 HandlerConstructorParams.routeSettingsArguments，则会在构造函数传入 routeSettings 参数
   /// RouterHandler(

@@ -28,59 +28,83 @@ class _HomePageState extends State<HomePage> {
             children: [
               const Text('HomePage (无参数)'),
               const SizedBox(height: 8),
-              // 路由守卫演示：未登录时访问详情/帖子/搜索会被重定向回首页
+              // 路由守卫演示：未登录时访问受保护页面会被「挂起」并先去认证页
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('登录状态（守卫）：', style: Theme.of(context).textTheme.bodyMedium),
-                  Switch(
-                    value: isLoggedIn,
-                    onChanged: (v) => setState(() => isLoggedIn = v),
+                  Text('认证守卫：', style: Theme.of(context).textTheme.bodyMedium),
+                  Text(
+                    'guard1=${guard1Passed ? "OK" : "NO"}  guard2=${guard2Passed ? "OK" : "NO"}',
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
-                  Text(isLoggedIn ? '已登录' : '未登录', style: Theme.of(context).textTheme.bodySmall),
+                  const SizedBox(width: 12),
+                  OutlinedButton(
+                    onPressed: () => setState(() {
+                      guard1Passed = false;
+                      guard2Passed = false;
+                    }),
+                    child: const Text('重置认证'),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
+
+              /// A -> C（await 返回值）模拟测试入口
               FilledButton(
-              onPressed: () => FluroConfig.push('/detail/99', context: context),
-              child: const Text('去详情页(单路径参数)'),
-            ),
-            FilledButton(
-              onPressed: () =>
-                  FluroConfig.push('/user/1/post/2', context: context),
-              child: const Text('去帖子页(多路径参数)'),
-            ),
-            FilledButton(
-              onPressed: () => FluroConfig.push(
-                '/search?keyword=test&page=1',
-                context: context,
+                onPressed: () async {
+                  final result = await FluroConfig.push<bool>(
+                    '/c',
+                    context: context,
+                  );
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('A 收到 C 返回：$result')));
+                },
+                child: const Text('A -> C（await C 返回值）'),
               ),
-              child: const Text('去搜索页(查询参数)'),
-            ),
-            FilledButton(
-              onPressed: () => FluroConfig.push(
-                '/pass-args',
-                context: context,
-                routeSettings: RouteSettings(
-                  name: '/pass-args',
-                  arguments: {'title': '传入标题', 'count': 42},
+
+              FilledButton(
+                onPressed: () =>
+                    FluroConfig.push('/detail/99', context: context),
+                child: const Text('去详情页(单路径参数)'),
+              ),
+              FilledButton(
+                onPressed: () =>
+                    FluroConfig.push('/user/1/post/2', context: context),
+                child: const Text('去帖子页(多路径参数)'),
+              ),
+              FilledButton(
+                onPressed: () => FluroConfig.push(
+                  '/search?keyword=test&page=1',
+                  context: context,
+                ),
+                child: const Text('去搜索页(查询参数)'),
+              ),
+              FilledButton(
+                onPressed: () => FluroConfig.push(
+                  '/pass-args',
+                  context: context,
+                  routeSettings: RouteSettings(
+                    name: '/pass-args',
+                    arguments: {'title': '传入标题', 'count': 42},
+                  ),
+                ),
+                child: const Text('去 PassArgs(routeSettings 有 defaultParams)'),
+              ),
+              FilledButton(
+                onPressed: () => FluroConfig.push(
+                  '/pass-args-no-defaults',
+                  context: context,
+                  routeSettings: RouteSettings(
+                    name: '/pass-args-no-defaults',
+                    arguments: {'message': '你好', 'flag': 'true'},
+                  ),
+                ),
+                child: const Text(
+                  '去 PassArgsNoDefaults(routeSettings 无 defaultParams)',
                 ),
               ),
-              child: const Text('去 PassArgs(routeSettings 有 defaultParams)'),
-            ),
-            FilledButton(
-              onPressed: () => FluroConfig.push(
-                '/pass-args-no-defaults',
-                context: context,
-                routeSettings: RouteSettings(
-                  name: '/pass-args-no-defaults',
-                  arguments: {'message': '你好', 'flag': 'true'},
-                ),
-              ),
-              child: const Text(
-                '去 PassArgsNoDefaults(routeSettings 无 defaultParams)',
-              ),
-            ),
             ],
           ),
         ),

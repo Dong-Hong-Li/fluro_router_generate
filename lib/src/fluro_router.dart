@@ -45,8 +45,43 @@ class FluroRouter with FluroRouterTools {
   bool notFoundClearStack = false;
 
   /// 路由守卫列表。在 [navigateTo] 中、执行 [Navigator.push] 之前按顺序执行；
-  /// 任一返回 [GuardResult.redirect] 则用新路径重新导航，返回 [GuardResult.cancel] 则取消本次跳转。
+  /// 任一返回 [GuardResult.redirect] 则用新路径重新导航，返回 [GuardResult.cancel] / [GuardResult.suspend] 则终止本次跳转。
   final List<RouteGuard> guards = [];
+
+  /// 是否存在被挂起的路由（挂起意图与 Completer 由 [GuardSuspend] 承载）。
+  bool get hasPendingRoute => GuardSuspend.hasPending;
+
+  /// 清除被挂起的路由意图（例如外部流程未通过时调用），当前页不变。
+  void clearPendingRoute() => GuardSuspend.clearPending();
+
+  /// 使用 [context] 继续执行此前挂起的导航（例如外部流程满足条件后调用）；若无挂起则 no-op。
+  /// 会再次经过守卫；执行后自动清除挂起意图。
+  Future<T?> resumePendingRoute<T extends Object?>(BuildContext context) async {
+    final pending = GuardSuspend.takePending();
+    if (pending == null) return null as T?;
+
+    try {
+      final result = await navigateTo<T>(
+        context,
+        pending.path,
+        replace: pending.replace,
+        clearStack: pending.clearStack,
+        maintainState: pending.maintainState,
+        rootNavigator: pending.rootNavigator,
+        transition: pending.transition,
+        transitionDuration: pending.transitionDuration,
+        transitionCurve: pending.transitionCurve,
+        transitionBuilder: pending.transitionBuilder,
+        routeSettings: pending.routeSettings,
+        opaque: pending.opaque,
+      );
+      pending.complete(result);
+      return result;
+    } catch (e, st) {
+      pending.completeError(e, st);
+      rethrow;
+    }
+  }
 
   ///定义一个新的路由 [PageRoute]。它将一个路由路径（routePath）与对应的处理逻辑 [FluroHandler]
   ///以及动画过渡相关的设置绑定在一起，并存储到 _routeTree 中。
@@ -213,6 +248,24 @@ class FluroRouter with FluroRouterTools {
         if (result is GuardCancel) {
           return null as T?;
         }
+        if (result is GuardSuspend) {
+          final pending = GuardSuspend.setPending(
+            path: path,
+            replace: replace,
+            clearStack: clearStack,
+            maintainState: maintainState,
+            rootNavigator: rootNavigator,
+            transition: transition,
+            transitionDuration: transitionDuration,
+            transitionCurve: transitionCurve,
+            transitionBuilder: transitionBuilder,
+            routeSettings: routeSettings,
+            opaque: opaque,
+          );
+          // `pending.future` 是 `Future<Object?>`，不能直接强转为 `Future<T?>`（会在运行时崩溃）。
+          // 用 then 包一层把值转成 `T?`，以保证 `FluroConfig.push<T>` 的返回类型正确。
+          return pending.future.then<T?>((v) => v as T?);
+        }
       }
       if (!context.mounted) return null as T?;
     }
@@ -265,7 +318,9 @@ class FluroRouter with FluroRouterTools {
       }
     }
 
-    return future as Future<T?>;
+    // `Navigator.push/pushReplacement/...` 返回的是 `Future<dynamic>`，
+    // 不能直接强转成 `Future<T?>`（例如 `Future<dynamic>` 不是 `Future<bool?>` 的子类型）。
+    return future.then<T?>((v) => v as T?);
   }
 
   /// 使用 [Navigator.pop]
