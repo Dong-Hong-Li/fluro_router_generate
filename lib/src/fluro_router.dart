@@ -7,7 +7,7 @@ import 'package:fluro_router_generate/src/fluro_handler.dart';
 import 'package:fluro_router_generate/src/fluro_route_data.dart';
 import 'package:fluro_router_generate/src/fluro_route_match.dart';
 import 'package:fluro_router_generate/src/fluro_route_storager.dart';
-import 'package:fluro_router_generate/src/route_guard.dart';
+import 'route_guard.dart';
 
 /// {@template fluro_router_generate}
 /// `FluroRouter` 是 Fluro 路由库的核心方法类，它提供了路由的定义、匹配、导航、过渡动画等功能。
@@ -193,6 +193,7 @@ class FluroRouter with FluroRouterTools {
       for (final guard in guards) {
         final result = await guard(guardContext);
         if (result is GuardRedirect) {
+          if (!context.mounted) return null as T?;
           return _navigateToInternal<T>(
             context,
             result.newPath,
@@ -213,6 +214,7 @@ class FluroRouter with FluroRouterTools {
           return null as T?;
         }
       }
+      if (!context.mounted) return null as T?;
     }
 
     Route<dynamic>? route = routeMatch.route;

@@ -3,14 +3,14 @@
 ---
 
 [![pub package](https://img.shields.io/pub/v/fluro_router_generate.svg)](https://pub.dev/packages/fluro_router_generate)
-[![License](https://img.shields.io/badge/license-Artistic%202.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Artistic%202.0-blue.svg)](https://github.com/Dong-Hong-Li/fluro_router_generate/blob/main/LICENSE)
 
 # fluro_router_generate
 
 Fluro-based routing for Flutter with **annotations and code generation**.  
 Register routes automatically via `@RouterAnnotation`, with path params, query params, and `RouteSettings.arguments`. Supports animated transitions and custom navigation.
 
-**Repositories (same project, two remotes):**  
+**Repositories**  
 - **GitHub:** [github.com/Dong-Hong-Li/fluro_router_generate](https://github.com/Dong-Hong-Li/fluro_router_generate) — `git clone https://github.com/Dong-Hong-Li/fluro_router_generate.git`  
 - **Gitee:** [gitee.com/lidonghonglalala/fluro_router_generate](https://gitee.com/lidonghonglalala/fluro_router_generate) — `git clone https://gitee.com/lidonghonglalala/fluro_router_generate.git`
 

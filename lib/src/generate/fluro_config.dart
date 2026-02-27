@@ -1,5 +1,4 @@
 import 'package:fluro_router_generate/fluro_router.dart';
-import 'package:fluro_router_generate/src/route_guard.dart';
 import 'package:flutter/material.dart';
 
 abstract class FluroConfig {

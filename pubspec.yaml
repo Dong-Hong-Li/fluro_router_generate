@@ -19,8 +19,7 @@ dependencies:
   flutter:
     sdk: flutter
     
-  # 用于从 ClassElement 
-  analyzer: ^8.0.0
+  analyzer: ">=8.0.0 <11.0.0"
 
 
   # 代码生成器

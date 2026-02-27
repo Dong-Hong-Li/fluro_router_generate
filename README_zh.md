@@ -3,7 +3,7 @@
 ---
 
 [![pub package](https://img.shields.io/pub/v/fluro_router_generate.svg)](https://pub.dev/packages/fluro_router_generate)
-[![License](https://img.shields.io/badge/license-Artistic%202.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Artistic%202.0-blue.svg)](https://github.com/Dong-Hong-Li/fluro_router_generate/blob/main/LICENSE)
 
 # fluro_router_generate
 

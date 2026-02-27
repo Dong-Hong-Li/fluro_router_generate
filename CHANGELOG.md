@@ -6,11 +6,27 @@
 
 **English**
 
-- Version bump; documentation and dependency examples updated to 1.1.2.
+- **Pub & conventions**: CHANGELOG entries for 1.1.1 and 1.1.2; package ready for clean publish.
+- **Static analysis**: Removed redundant package import in `lib/src/fluro_router.dart` (use relative import for `route_guard.dart`).
+- **Dependencies**: Relaxed `analyzer` constraint to `>=8.0.0 <11.0.0` so the package supports current stable (e.g. 9.x, 10.x) and improves pub score.
 
 **中文**
 
-- 版本号与文档、示例依赖更新至 1.1.2。
+- **Pub 与规范**：补全 1.1.1、1.1.2 的 CHANGELOG，便于在干净 git 状态下发布。
+- **静态分析**：移除 `lib/src/fluro_router.dart` 中多余包导入，改为相对导入 `route_guard.dart`。
+- **依赖**：将 `analyzer` 约束放宽为 `>=8.0.0 <11.0.0`，支持当前稳定版（如 9.x、10.x），提升 pub 评分。
+
+---
+
+## 1.1.1
+
+**English**
+
+- Maintenance release; dependency and tooling updates.
+
+**中文**
+
+- 维护版本；依赖与工具链更新。
 
 ---
 
