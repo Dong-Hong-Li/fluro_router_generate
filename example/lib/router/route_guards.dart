@@ -39,6 +39,7 @@ Future<GuardResult> authGuard1(RouteGuardContext ctx) async {
         if (ok == true) {
           guard1Passed = true;
           if (!context.mounted) return;
+          await Future.delayed(const Duration(seconds: 1));
           await FluroConfig.resumePendingRoute<bool>(context);
         } else {
           FluroConfig.clearPendingRoute();
@@ -71,6 +72,7 @@ Future<GuardResult> authGuard2(RouteGuardContext ctx) async {
         if (ok == true) {
           guard2Passed = true;
           if (!context.mounted) return;
+          await Future.delayed(const Duration(seconds: 1));
           await FluroConfig.resumePendingRoute<bool>(context);
         } else {
           FluroConfig.clearPendingRoute();

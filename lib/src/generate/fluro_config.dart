@@ -28,8 +28,9 @@ abstract class FluroConfig {
   static void clearPendingRoute() => router.clearPendingRoute();
 
   /// 使用 [context] 继续执行此前挂起的导航（例如外部流程满足条件后调用）；若无挂起则 no-op。执行后自动清除挂起意图。
-  static Future<T?> resumePendingRoute<T extends Object?>(BuildContext context) =>
-      router.resumePendingRoute<T>(context);
+  static Future<T?> resumePendingRoute<T extends Object?>(
+    BuildContext context,
+  ) => router.resumePendingRoute<T>(context);
 
   /// 跳转边界路由是否清空堆栈
   set notFoundClearStack(bool value) {

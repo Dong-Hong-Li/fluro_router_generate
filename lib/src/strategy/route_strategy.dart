@@ -80,10 +80,7 @@ class CustomRouteStrategy implements RouteStrategy {
         routeConfig.transitionsBuilder ?? routeConfig.route?.transitionBuilder;
 
     return PageRouteBuilder<dynamic>(
-      /// 在调试模式下，设置默认不透明为透明，方便调试
-      opaque: routeConfig.opaque ?? routeConfig.route?.opaque ?? kDebugMode
-          ? true
-          : false,
+      opaque: false,
       settings: routeConfig.routeSettings,
       maintainState: routeConfig.maintainState,
       pageBuilder:
