@@ -1,6 +1,6 @@
 name: fluro_router_generate
 description: A powerful Flutter library for routing based on Fluro, featuring annotations and code generation, with animated transitions, route matching, and support for custom navigation.
-version: 1.0.0
+version: 1.1.0
 repository: https://gitee.com/lidonghonglalala/fluro_router_generate
 homepage: https://gitee.com/lidonghonglalala/fluro_router_generate 
 environment:

@@ -10,6 +10,7 @@ export 'src/fluro_router.dart';
 export 'src/fluro_handler.dart';
 export 'src/fluro_route_data.dart';
 export 'src/fluro_route_match.dart';
+export 'src/route_guard.dart';
 
 // Enums and types
 export 'src/enum.dart';

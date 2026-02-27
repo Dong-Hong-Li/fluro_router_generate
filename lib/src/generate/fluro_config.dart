@@ -1,4 +1,5 @@
 import 'package:fluro_router_generate/fluro_router.dart';
+import 'package:fluro_router_generate/src/route_guard.dart';
 import 'package:flutter/material.dart';
 
 abstract class FluroConfig {
@@ -12,6 +13,13 @@ abstract class FluroConfig {
   /// 当用户尝试导航到一个未定义的路由时 返回一个边界路由
   set notFoundHandler(FluroHandler? handler) {
     router.notFoundHandler = handler;
+  }
+
+  /// 注册路由守卫。守卫在每次 [push]/[navigateTo] 时、**执行 [Navigator.push] 之前** 按注册顺序执行，
+  /// 可返回 [GuardResult.allow]（放行）、[GuardResult.redirect]（重定向到新路径）或 [GuardResult.cancel]（取消跳转）。
+  /// 与 [NavigatorObserver] 不同，守卫用于跳转前拦截或重定向；Observer 仅能事后回调（didPush/didPop 等）。
+  static void addGuard(RouteGuard guard) {
+    router.guards.add(guard);
   }
 
   /// 跳转边界路由是否清空堆栈

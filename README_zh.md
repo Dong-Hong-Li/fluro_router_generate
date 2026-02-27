@@ -110,6 +110,37 @@ FluroConfig.router.navigateTo(context, '/home/1');
 
 ---
 
+## 7. 路由守卫（可选）
+
+守卫在每次**执行 [Navigator.push] 之前**运行，可放行、重定向或取消本次跳转，与仅能事后回调的 [NavigatorObserver] 互补。
+
+```dart
+import 'package:fluro_router_generate/fluro_router.dart';
+
+// 例如：未登录访问 /admin 时重定向到登录页
+FluroConfig.addGuard((ctx) async {
+  if (ctx.path.startsWith('/admin') && !isLoggedIn()) {
+    return GuardResult.redirect('/login');
+  }
+  return GuardResult.allow;
+});
+
+// 需要时移除或清空
+FluroConfig.removeGuard(myGuard);
+FluroConfig.clearGuards();
+```
+
+| API | 说明 |
+|-----|------|
+| `addGuard(guard)` | 追加守卫，按注册顺序执行。 |
+| `insertGuard(index, guard)` | 在指定索引插入守卫。 |
+| `removeGuard(guard)` | 按引用移除第一个匹配的守卫。 |
+| `clearGuards()` | 清空所有守卫。 |
+
+守卫返回值：`GuardResult.allow`、`GuardResult.redirect(newPath)`、`GuardResult.cancel`。重定向最多 5 次以防死循环。
+
+---
+
 ## 注解说明
 
 | 字段 | 说明 |

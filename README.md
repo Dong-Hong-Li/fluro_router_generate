@@ -110,6 +110,37 @@ FluroConfig.router.navigateTo(context, '/home/1');
 
 ---
 
+## 7. Route guards (optional)
+
+Guards run **before** each `Navigator.push`, so you can allow, redirect, or cancel navigation. This is different from `NavigatorObserver`, which only runs after push/pop.
+
+```dart
+import 'package:fluro_router_generate/fluro_router.dart';
+
+// e.g. redirect to login when visiting /admin without auth
+FluroConfig.addGuard((ctx) async {
+  if (ctx.path.startsWith('/admin') && !isLoggedIn()) {
+    return GuardResult.redirect('/login');
+  }
+  return GuardResult.allow;
+});
+
+// Remove or clear when needed
+FluroConfig.removeGuard(myGuard);
+FluroConfig.clearGuards();
+```
+
+| API | Description |
+|-----|-------------|
+| `addGuard(guard)` | Append a guard (runs in order). |
+| `insertGuard(index, guard)` | Insert at index. |
+| `removeGuard(guard)` | Remove first matching guard by reference. |
+| `clearGuards()` | Remove all guards. |
+
+Guard returns: `GuardResult.allow`, `GuardResult.redirect(newPath)`, `GuardResult.cancel`. Redirect is limited to 5 hops to avoid loops.
+
+---
+
 ## Annotation reference
 
 | Field | Description |

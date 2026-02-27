@@ -7,6 +7,7 @@ import 'package:fluro_router_generate/src/fluro_handler.dart';
 import 'package:fluro_router_generate/src/fluro_route_data.dart';
 import 'package:fluro_router_generate/src/fluro_route_match.dart';
 import 'package:fluro_router_generate/src/fluro_route_storager.dart';
+import 'package:fluro_router_generate/src/route_guard.dart';
 
 /// {@template fluro_router_generate}
 /// `FluroRouter` 是 Fluro 路由库的核心方法类，它提供了路由的定义、匹配、导航、过渡动画等功能。
@@ -42,6 +43,10 @@ class FluroRouter with FluroRouterTools {
 
   /// 跳转边界路由是否清空堆栈
   bool notFoundClearStack = false;
+
+  /// 路由守卫列表。在 [navigateTo] 中、执行 [Navigator.push] 之前按顺序执行；
+  /// 任一返回 [GuardResult.redirect] 则用新路径重新导航，返回 [GuardResult.cancel] 则取消本次跳转。
+  final List<RouteGuard> guards = [];
 
   ///定义一个新的路由 [PageRoute]。它将一个路由路径（routePath）与对应的处理逻辑 [FluroHandler]
   ///以及动画过渡相关的设置绑定在一起，并存储到 _routeTree 中。
@@ -111,9 +116,44 @@ class FluroRouter with FluroRouterTools {
   ///  // 如果有返回结果并且提供了 pushResult 回调函数，则调用回调
   ///  if (result != null && pushResult != null) pushResult(result);
   ///```
+  /// 守卫重定向最大次数，防止重定向死循环。
+  static const int _maxGuardRedirects = 5;
+
   Future<T?> navigateTo<T extends Object?>(
     BuildContext context,
     String path, {
+    bool replace = false,
+    bool clearStack = false,
+    bool maintainState = true,
+    bool rootNavigator = false,
+    TransitionType? transition,
+    Duration? transitionDuration,
+    Curve? transitionCurve,
+    RouteTransitionsBuilder? transitionBuilder,
+    RouteSettings? routeSettings,
+    bool? opaque,
+  }) async {
+    return _navigateToInternal<T>(
+      context,
+      path,
+      redirectCount: 0,
+      replace: replace,
+      clearStack: clearStack,
+      maintainState: maintainState,
+      rootNavigator: rootNavigator,
+      transition: transition,
+      transitionDuration: transitionDuration,
+      transitionCurve: transitionCurve,
+      transitionBuilder: transitionBuilder,
+      routeSettings: routeSettings,
+      opaque: opaque,
+    );
+  }
+
+  Future<T?> _navigateToInternal<T extends Object?>(
+    BuildContext context,
+    String path, {
+    required int redirectCount,
     bool replace = false,
     bool clearStack = false,
     bool maintainState = true,
@@ -137,6 +177,43 @@ class FluroRouter with FluroRouterTools {
       routeSettings: routeSettings,
       opaque: opaque,
     );
+
+    // 在真正执行 Navigator.push 之前执行守卫（跳转前拦截/重定向）
+    if (guards.isNotEmpty && redirectCount < _maxGuardRedirects) {
+      final guardContext = RouteGuardContext(
+        context: context,
+        path: path,
+        replace: replace,
+        clearStack: clearStack,
+        maintainState: maintainState,
+        rootNavigator: rootNavigator,
+        routeMatch: routeMatch,
+        routeSettings: routeSettings,
+      );
+      for (final guard in guards) {
+        final result = await guard(guardContext);
+        if (result is GuardRedirect) {
+          return _navigateToInternal<T>(
+            context,
+            result.newPath,
+            redirectCount: redirectCount + 1,
+            replace: replace,
+            clearStack: clearStack,
+            maintainState: maintainState,
+            rootNavigator: rootNavigator,
+            transition: transition,
+            transitionDuration: transitionDuration,
+            transitionCurve: transitionCurve,
+            transitionBuilder: transitionBuilder,
+            routeSettings: routeSettings,
+            opaque: opaque,
+          );
+        }
+        if (result is GuardCancel) {
+          return null as T?;
+        }
+      }
+    }
 
     Route<dynamic>? route = routeMatch.route;
 
