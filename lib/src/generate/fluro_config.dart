@@ -37,7 +37,7 @@ abstract class FluroConfig {
     router.notFoundClearStack = value;
   }
 
-  /// 由带 [EntranceAnnotation] 的配置类对应生成的 .g.dart 扩展实现；
+  /// 由带 [EntranceAnnotation] 的配置类对应生成的 .router.g.dart 扩展实现；
   /// 子类通过扩展获得 [initAllHandlers]，基类不声明以避免遮蔽扩展方法。
 
   /// 导航到指定路径的路由，并可配置路由的导航行为和过渡效果。

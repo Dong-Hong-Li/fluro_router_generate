@@ -6,9 +6,9 @@ builders:
   router_library:
     import: "package:fluro_router_generate/src/generate/builder/builds.dart"
     builder_factories: ["buildRouter"]
-    # 输入 .dart → 输出同目录 .g.dart
+    # 输入 .dart → 输出同目录 .router.g.dart（与 source_gen 的 .g.dart 区分，避免 output 冲突）
     build_extensions:
-      ".dart": [".g.dart"]
+      ".dart": [".router.g.dart"]
     build_to: source
     # 仅在被依赖的项目中运行，不在本包内对任意 .dart 全量跑
     auto_apply: dependents

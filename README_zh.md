@@ -19,7 +19,7 @@
 
 ```yaml
 dependencies:
-  fluro_router_generate: ^1.1.3  # 或 path: ../ 本地开发
+  fluro_router_generate: ^1.2.0  # 或 path: ../ 本地开发
 
 dev_dependencies:
   build_runner: ^2.10.5
@@ -33,7 +33,7 @@ dev_dependencies:
 
 ```dart
 import 'package:fluro_router_generate/fluro_router_generate.dart';
-export 'router_config.g.dart';
+export 'router_config.router.g.dart';
 
 @EntranceAnnotation()
 class RouteConfig extends FluroConfig {
@@ -69,7 +69,7 @@ class HomePage extends StatelessWidget {
 **使用方项目**根目录必须有 `build.yaml`，且**仅**对带 `@EntranceAnnotation` 的入口文件触发生成：
 
 ```yaml
-# 仅对路由入口触发生成，生成 lib/router/router_config.g.dart
+# 仅对路由入口触发生成，生成 lib/router/router_config.router.g.dart
 targets:
   $default:
     builders:
@@ -80,7 +80,7 @@ targets:
             # - lib/router/router_config.dart
 ```
 
-- **未配置或未在 `include` 中指定入口文件时**：build_runner 默认会对**所有** `.dart` 触发生成器。对每个**非入口**文件（没有 `@EntranceAnnotation` 的），生成器会返回空内容，Builder 会**直接抛错**并提示配置 build.yaml，不会为该文件生成 `.g.dart`，整次 build 会失败。
+- **未配置或未在 `include` 中指定入口文件时**：build_runner 默认会对**所有** `.dart` 触发生成器。对每个**非入口**文件（没有 `@EntranceAnnotation` 的），生成器会返回空内容，Builder 会**直接抛错**并提示配置 build.yaml，不会为该文件生成 `.router.g.dart`，整次 build 会失败。
 - 因此必须在 `include` 里**只**写上路由入口文件（带 `@EntranceAnnotation` 的那个），否则会报错。
 - 既没有在入口文件上加 `@EntranceAnnotation`，又未正确配置 build.yaml 时，运行 `build_runner` 也会报错。
 
@@ -92,7 +92,7 @@ targets:
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-会生成 `router_config.g.dart`，内含 `generatedHandlers` 和 `initAllHandlers()`。
+会生成 `router_config.router.g.dart`，内含 `generatedHandlers` 和 `initAllHandlers()`。（`.router.g.dart` 后缀用于与 `source_gen:combining_builder` 的 `.g.dart` 区分，避免 output 冲突。）
 
 ---
 
@@ -171,7 +171,7 @@ FluroConfig.addGuard((ctx) async {
 | `description` | 可选，生成列表中的注释 |
 | `defaultParams` | 可选，参数默认值，如 `{'id': '-', 'page': 1}` |
 | `constructorParams` | 可选，`pathParams` / `queryParams` / `routeSettingsArguments` / `none`，决定参数如何传入构造函数 |
-| `module` | 可选，模块名，用于分文件生成与分组；配合 build.yaml 的 `split_modules` 可拆成独立 `.g.dart` |
+| `module` | 可选，模块名，用于分文件生成与分组；配合 build.yaml 的 `split_modules` 可拆成独立 `.router.g.dart` |
 
 更多用法见 `example/`。
 
@@ -308,7 +308,7 @@ class HomePage extends StatelessWidget { ... }
 class PaymentPage extends StatelessWidget { ... }
 ```
 
-若希望 `payment` 模块拆成独立文件 `router_config_payment.g.dart`，在**项目根目录** `build.yaml` 里为该 builder 增加 `split_modules`：
+若希望 `payment` 模块拆成独立文件 `router_config_payment.router.g.dart`，在**项目根目录** `build.yaml` 里为该 builder 增加 `split_modules`：
 
 ```yaml
 targets:
@@ -329,6 +329,11 @@ targets:
 ---
 
 ## 常见问题
+
+### build_runner 报错：Builders source_gen:combining_builder 和 fluro_router_generate:router_library outputs collide
+
+- **原因**：两个 builder 都声明对同一输入输出 `.g.dart`，当路由入口文件同时被两者处理时会争写同一文件。
+- **解决**：本包已改为输出 `.router.g.dart`，与 source_gen 的 `.g.dart` 区分。请升级到最新版本，将入口文件中的 `export 'router_config.g.dart';` 改为 `export 'router_config.router.g.dart';`，然后执行 `dart run build_runner build --delete-conflicting-outputs`。
 
 ### defaultParams 和构造函数，对参数名称哪个优先级高？
 

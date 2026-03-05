@@ -2,6 +2,18 @@
 
 ---
 
+## 1.2.0
+
+**English**
+
+- **Breaking**: Generated file suffix changed from `.g.dart` to `.router.g.dart` to avoid output collision with `source_gen:combining_builder` (e.g. when using json_serializable, freezed in the same project). Update your route entry to `export 'router_config.router.g.dart';` and run `dart run build_runner build --delete-conflicting-outputs`.
+
+**中文**
+
+- **破坏性变更**：生成文件后缀由 `.g.dart` 改为 `.router.g.dart`，避免与 `source_gen:combining_builder` 输出冲突（如项目内同时使用 json_serializable、freezed）。请将路由入口改为 `export 'router_config.router.g.dart';` 并执行 `dart run build_runner build --delete-conflicting-outputs`。
+
+---
+
 ## 1.1.3
 
 **English**

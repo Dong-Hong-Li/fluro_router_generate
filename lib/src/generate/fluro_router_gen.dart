@@ -284,14 +284,14 @@ void _writeGeneratedHeader(
   buffer.writeln();
 }
 
-/// 返回模块分文件的 import URI（如 package:example/router/router_config_main.g.dart）。
+/// 返回模块分文件的 import URI（如 package:example/router/router_config_main.router.g.dart）。
 String _moduleFileImportUri(
   String package,
   String basePath,
   String moduleName,
 ) {
   final path = basePath.startsWith('lib/') ? basePath.substring(4) : basePath;
-  return 'package:$package/${path}_$moduleName.g.dart';
+  return 'package:$package/${path}_$moduleName.router.g.dart';
 }
 
 /// 写入单模块文件的 import（仅该模块用到的页面 + fluro_router）。
@@ -642,8 +642,8 @@ Future<List<_RouteEntry>> _collectAnnotatedRoutes(BuildStep buildStep) async {
     // 排除其他包的类
     if (assetId.package != package) continue;
 
-    // 排除生成的路由表文件
-    if (assetId.path.endsWith('.g.dart')) continue;
+    // 排除生成的路由表文件（.router.g.dart 及其它 .g.dart）
+    if (assetId.path.endsWith('.router.g.dart') || assetId.path.endsWith('.g.dart')) continue;
 
     // 获取当前类的库
     final lib = await buildStep.resolver.libraryFor(assetId);

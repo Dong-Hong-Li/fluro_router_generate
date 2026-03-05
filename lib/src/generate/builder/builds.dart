@@ -33,9 +33,12 @@ class RouterTableBuilder implements Builder {
   /// 同一次 build 中若曾对非入口文件报错，则不再写入任何输出。
   static bool _sawNonEntryFileInThisRun = false;
 
+  /// 使用 .router.g.dart 后缀，避免与 source_gen:combining_builder 的 .g.dart 输出冲突
+  static const String _outputSuffix = '.router.g.dart';
+
   @override
   Map<String, List<String>> get buildExtensions => {
-    '.dart': ['.g.dart', for (final m in _splitModules) '_$m.g.dart'],
+    '.dart': [_outputSuffix, for (final m in _splitModules) '_$m$_outputSuffix'],
   };
 
   static const String _configHint = '''
@@ -54,7 +57,7 @@ targets:
   static String _configError(String inputPath) =>
       '【生成已终止】未在 build.yaml 的 generate_for.include 中指定路由入口文件，'
       '或当前输入 $inputPath 不是带 @EntranceAnnotation 的入口文件。'
-      '必须配置 include 仅包含入口文件，否则报错并立即终止，且不写入任何 .g.dart。$_configHint';
+      '必须配置 include 仅包含入口文件，否则报错并立即终止，且不写入任何 .router.g.dart。$_configHint';
 
   /// 未配置或未在 include 中指定入口文件时：报错并立即终止，不写入任何文件。
   @override
@@ -80,7 +83,7 @@ targets:
     for (final entry in outputs.entries) {
       final key = entry.key;
       final content = entry.value;
-      final path = key.isEmpty ? '$basePath.g.dart' : '${basePath}_$key.g.dart';
+      final path = key.isEmpty ? '$basePath$_outputSuffix' : '${basePath}_$key$_outputSuffix';
       await buildStep.writeAsString(AssetId(package, path), content);
     }
   }

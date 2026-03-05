@@ -17,7 +17,10 @@ bool _isProtectedPath(String path) {
 
 bool _isAuthRoute(String path) => path.split('?').first == '/auth';
 
+/// 认证守卫1是否正在进行
 bool _guard1UiInProgress = false;
+
+/// 认证守卫2是否正在进行
 bool _guard2UiInProgress = false;
 
 /// 认证守卫1：未通过则挂起并去 B（认证通过后 resume）

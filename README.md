@@ -20,7 +20,7 @@ Register routes automatically via `@RouterAnnotation`, with path params, query p
 
 ```yaml
 dependencies:
-  fluro_router_generate: ^1.1.3  # or path: ../ for local
+  fluro_router_generate: ^1.2.0  # or path: ../ for local
 
 dev_dependencies:
   build_runner: ^2.10.5
@@ -34,7 +34,7 @@ In `lib/xxxx.dart`:
 
 ```dart
 import 'package:fluro_router_generate/fluro_router_generate.dart';
-export 'router_config.g.dart';
+export 'router_config.router.g.dart';
 
 @EntranceAnnotation()
 class RouteConfig extends FluroConfig {
@@ -70,7 +70,7 @@ class HomePage extends StatelessWidget {
 Your **app project** must have a root `build.yaml`, and **only** the file with `@EntranceAnnotation` may trigger the builder:
 
 ```yaml
-# Only the route entry file triggers generation, e.g. lib/router/router_config.g.dart
+# Only the route entry file triggers generation, e.g. lib/router/router_config.router.g.dart
 targets:
   $default:
     builders:
@@ -93,7 +93,7 @@ targets:
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-This generates `router_config.g.dart` with `generatedHandlers` and `initAllHandlers()`.
+This generates `router_config.router.g.dart` with `generatedHandlers` and `initAllHandlers()`. (The `.router.g.dart` suffix avoids output collision with `source_gen:combining_builder`.)
 
 ---
 
@@ -174,7 +174,7 @@ FluroConfig.addGuard((ctx) async {
 | `description` | Optional, comment in generated list |
 | `defaultParams` | Optional, default values, e.g. `{'id': '-', 'page': 1}` |
 | `constructorParams` | Optional: `pathParams` / `queryParams` / `routeSettingsArguments` / `none` — how params are passed to the constructor |
-| `module` | Optional, module name for grouping/splitting; with build.yaml `split_modules` can emit a separate `.g.dart` |
+| `module` | Optional, module name for grouping/splitting; with build.yaml `split_modules` can emit a separate `.router.g.dart` |
 
 See `example/` for more.
 
@@ -311,7 +311,7 @@ class HomePage extends StatelessWidget { ... }
 class PaymentPage extends StatelessWidget { ... }
 ```
 
-To emit a separate file e.g. `router_config_payment.g.dart` for the `payment` module, add `split_modules` in your **project root** `build.yaml`:
+To emit a separate file e.g. `router_config_payment.router.g.dart` for the `payment` module, add `split_modules` in your **project root** `build.yaml`:
 
 ```yaml
 targets:
@@ -351,6 +351,7 @@ Modules not in `split_modules` are inlined into the main generated file. See `ex
 
 | Issue | What to check |
 |-------|----------------|
+| **Builders outputs collide** (`source_gen:combining_builder` and `fluro_router_generate:router_library`) | This package now emits `.router.g.dart` (not `.g.dart`) to avoid the conflict. Upgrade to the latest version and change your export to `export 'router_config.router.g.dart';`, then run `dart run build_runner build --delete-conflicting-outputs`. |
 | **build_runner fails** with a message about build.yaml | Ensure the **only** file in `generate_for.include` is your route entry file (the one with `@EntranceAnnotation`). Do not include every `.dart` file. |
 | **Route not found** at runtime | Call `RouteConfig.instance.initAllHandlers()` before `runApp()`, and use `onGenerateRoute: FluroConfig.router.generator` in `MaterialApp`. |
 | **Wrong or missing params** on the page | Match `constructorParams` to how you pass data: `pathParams` for `/path/:id`, `queryParams` for `?key=`, `routeSettingsArguments` for `RouteSettings.arguments`. Use `defaultParams` when you need defaults. |

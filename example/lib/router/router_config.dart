@@ -1,6 +1,6 @@
 import 'package:fluro_router_generate/fluro_router.dart';
 
-export 'router_config.g.dart';
+export 'router_config.router.g.dart';
 
 @EntranceAnnotation()
 class RouteConfig extends FluroConfig {
