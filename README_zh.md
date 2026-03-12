@@ -3,7 +3,7 @@
 ---
 
 [![pub package](https://img.shields.io/pub/v/fluro_router_generate.svg)](https://pub.dev/packages/fluro_router_generate)
-[![Dart CI](https://github.com/Dong-Hong-Li/fluro_router_generate/actions/workflows/dart.yml/badge.svg)](https://github.com/Dong-Hong-Li/fluro_router_generate/actions/workflows/dart.yml)
+[![Dart CI](https://github.com/Dong-Hong-Li/fluro_router_generate/actions/workflows/dart.yml/badge.svg)](https://github.com/Dong-Hong-Li/fluro_router_generate/actions/workflows/release.yml)
 [![License](https://img.shields.io/badge/license-Artistic%202.0-blue.svg)](https://github.com/Dong-Hong-Li/fluro_router_generate/blob/main/LICENSE)
 
 # fluro_router_generate
@@ -16,7 +16,7 @@
 
 ---
 
-## 和竞品比一比
+## 和其他对比
 
 | | **fluro** | **fluro_router_generate** | **go_router** | **auto_route** |
 |---|:---:|:---:|:---:|:---:|

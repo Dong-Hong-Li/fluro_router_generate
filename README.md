@@ -3,7 +3,7 @@
 ---
 
 [![pub package](https://img.shields.io/pub/v/fluro_router_generate.svg)](https://pub.dev/packages/fluro_router_generate)
-[![Dart CI](https://github.com/Dong-Hong-Li/fluro_router_generate/actions/workflows/dart.yml/badge.svg)](https://github.com/Dong-Hong-Li/fluro_router_generate/actions/workflows/dart.yml)
+[![Dart CI](https://github.com/Dong-Hong-Li/fluro_router_generate/actions/workflows/dart.yml/badge.svg)](https://github.com/Dong-Hong-Li/fluro_router_generate/actions/workflows/release.yml)
 [![License](https://img.shields.io/badge/license-Artistic%202.0-blue.svg)](https://github.com/Dong-Hong-Li/fluro_router_generate/blob/main/LICENSE)
 
 # fluro_router_generate
@@ -12,11 +12,10 @@
 
 You stay on [Fluro](https://github.com/lukepighetti/fluro)—same `FluroRouter`, same transitions—but define routes with `@RouterAnnotation` and get generated handlers, typed path/query/arguments, route guards, and optional deferred loading. No need to hand-write `define` + `FluroHandler` for every screen.
 
-**Repositories:** [GitHub](https://github.com/Dong-Hong-Li/fluro_router_generate) · [Gitee](https://gitee.com/lidonghonglalala/fluro_router_generate)
-
+**Repositories:** [GitHub](https://github.com/Dong-Hong-Li/fluro_router_generate) ·
 ---
 
-## Fluro vs others
+## In comparison with others
 
 | | **fluro** | **fluro_router_generate** | **go_router** | **auto_route** |
 |---|:---:|:---:|:---:|:---:|
