@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluro_router_generate/src/enum.dart';
 import 'package:fluro_router_generate/src/fluro_route_data.dart';
@@ -118,7 +117,11 @@ class CustomRouteStrategy implements RouteStrategy {
   }
 }
 
-/// 定义了一些简单过渡策略类,只需要传递 `RouteTransitionsBuilder` 对象即可
+/// 用于支持手势返回,
+///
+///
+/// 因为返回手势需要设置 opaque: false 以支持侧滑时露出下层页面
+/// 页面内容需要自己设置背景色（如 Scaffold 的 backgroundColor）
 class SimpleTransitionStrategy implements RouteStrategy {
   final RouteTransitionsBuilder transitionsBuilder;
 
@@ -127,12 +130,7 @@ class SimpleTransitionStrategy implements RouteStrategy {
   @override
   PageRoute<dynamic> createRoute(RouteConfiguration routeConfig) {
     return PageRouteBuilder<dynamic>(
-      // 设置 opaque: false 以支持侧滑时露出下层页面
-      // 页面内容需要自己设置背景色（如 Scaffold 的 backgroundColor）
-      /// 在调试模式下，设置默认不透明为透明，方便调试
-      opaque: routeConfig.opaque ?? routeConfig.route?.opaque ?? kDebugMode
-          ? true
-          : false,
+      opaque: routeConfig.opaque ?? routeConfig.route?.opaque ?? false,
       settings: routeConfig.routeSettings,
       maintainState: routeConfig.maintainState,
       pageBuilder:

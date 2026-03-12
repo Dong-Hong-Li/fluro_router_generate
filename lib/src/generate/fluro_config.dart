@@ -9,6 +9,61 @@ abstract class FluroConfig {
     _context = value;
   }
 
+  /// Deferred 路由全局默认：加载中/失败 UI。未设置时 [DeferredRoutePage] 使用内置默认。
+  static DeferredRouteUIOptions? deferredRouteUIOptions;
+
+  static final Map<String, DeferredRouteUIOptions> _deferredRouteOverrides = {};
+
+  /// 为指定 path 设置 Deferred 加载中/失败 UI 或自定义 [DeferredRouteWrapper]，覆盖全局 [deferredRouteUIOptions]。
+  static void setDeferredBuildersForPath(
+    String path, {
+    DeferredLoadingBuilder? loading,
+    DeferredErrorBuilder? error,
+    DeferredRouteWrapper? wrapper,
+  }) {
+    _deferredRouteOverrides[path] = DeferredRouteUIOptions(
+      loadingBuilder: loading,
+      errorBuilder: error,
+      wrapper: wrapper,
+    );
+  }
+
+  /// 供生成代码使用：按 path 取加载中 builder（先单路径覆盖，再全局默认）。
+  static DeferredLoadingBuilder? deferredLoadingBuilderFor(String path) =>
+      _deferredRouteOverrides[path]?.loadingBuilder ??
+      deferredRouteUIOptions?.loadingBuilder;
+
+  /// 供生成代码使用：按 path 取失败 builder（先单路径覆盖，再全局默认）。
+  static DeferredErrorBuilder? deferredErrorBuilderFor(String path) =>
+      _deferredRouteOverrides[path]?.errorBuilder ??
+      deferredRouteUIOptions?.errorBuilder;
+
+  /// 供生成代码使用：按 path 取自定义包装器（先单路径覆盖，再全局默认）。非 null 时由 [DeferredRoutePage] 使用 [wrapper] 完全接管展示。
+  static DeferredRouteWrapper? deferredWrapperFor(String path) =>
+      _deferredRouteOverrides[path]?.wrapper ?? deferredRouteUIOptions?.wrapper;
+
+  static final Map<String, Future<void> Function()> _deferredLoaders = {};
+
+  /// 注册某条 deferred 路由的 loader，用于 [preloadDeferredRoute] 预加载。
+  /// 大模块（如直播、音视频剪辑）可在首页就绪或进入发现页时预加载，减少首次进入该路由时的等待。
+  /// 需与生成代码中的 path 一致；loader 通常为对应 deferred 库的 loadLibrary，例如：
+  /// `FluroConfig.registerDeferredLoader('/search?keyword=&page=1', () => search_lib.loadLibrary());`
+  static void registerDeferredLoader(String path, Future<void> Function() loader) {
+    _deferredLoaders[path] = loader;
+  }
+
+  /// 预加载指定 path 的 deferred 模块（若已注册）。同进程内重复调用只会执行一次实际加载。
+  /// 建议在首页渲染完成或用户进入相关入口时调用，以分摊大模块加载时机。
+  static Future<void> preloadDeferredRoute(String path) async {
+    final loader = _deferredLoaders[path];
+    if (loader != null) await loader();
+  }
+
+  /// 预加载所有已通过 [registerDeferredLoader] 注册的 deferred 模块。
+  static Future<void> preloadAllDeferredRoutes() async {
+    await Future.wait(_deferredLoaders.values.map((loader) => loader()));
+  }
+
   /// 当用户尝试导航到一个未定义的路由时 返回一个边界路由
   set notFoundHandler(FluroHandler? handler) {
     router.notFoundHandler = handler;
@@ -72,7 +127,7 @@ abstract class FluroConfig {
     bool maintainState = true,
     bool rootNavigator = false,
     BuildContext? context,
-    TransitionType transition = TransitionType.inFromRight,
+    TransitionType transition = TransitionType.native,
     Duration? transitionDuration,
     Curve? transitionCurve,
     RouteTransitionsBuilder? transitionBuilder,

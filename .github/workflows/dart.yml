@@ -1,31 +1,94 @@
-name: Dart CI
+name: Release
 
+# 本地用 act 跑时：M 芯片 Mac 需加 --container-architecture linux/amd64，否则 Set up Flutter 会报
+# "Unable to determine Flutter version ... architecture: arm64"。例：act --pull=false --container-architecture linux/amd64
+
+# -----------------------------------------------------------------------------
+# on：触发条件
+# -----------------------------------------------------------------------------
 on:
   push:
-    branches: [ main, master ]
+    branches: [main]
+    tags: ['v*']
+    paths:
+      - 'pubspec.yaml'
+      - 'lib/**'
+      - 'test/**'
   pull_request:
-    branches: [ main, master ]
+    branches: [main]
+    paths:
+      - 'pubspec.yaml'
+      - 'lib/**'
+      - 'test/**'
 
+# -----------------------------------------------------------------------------
+# 常见设计：拆成两个 job
+# - test：推分支 / PR 时跑（保证合入前有测试）
+# - publish：只推 tag 时跑（做完整检查 + 发布）
+# -----------------------------------------------------------------------------
 jobs:
-  analyze-and-test:
+  test:
+    name: Test
     runs-on: ubuntu-latest
+    # 非 tag 推送时才跑（即：推 main/develop 或 PR 时跑；推 tag 时不跑，交给 publish）
+    if: "!startsWith(github.ref, 'refs/tags/')"
     steps:
       - uses: actions/checkout@v4
-
-      - uses: subosito/flutter-action@v2
+      # 安装 Flutter
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.32.0'
           channel: 'stable'
           cache: true
+          architecture: 'x64'
 
-      - name: Print versions
-        run: flutter --version && dart --version
-
+      # 安装项目依赖
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Analyze
+      # 静态分析（PR/推分支时就能发现 lint/analyze 问题）
+      - name: Static analysis
         run: dart analyze --fatal-warnings --fatal-infos
 
+      # 执行所有测试
       - name: Run tests
         run: flutter test
+
+  publish:
+    name: Publish to pub.dev
+    runs-on: ubuntu-latest
+    # 只有推了 v 开头的 tag 时才跑
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      # 安装 Flutter
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.0'
+          channel: 'stable'
+          cache: true
+
+      # 安装项目依赖
+      - name: Install dependencies
+        run: flutter pub get
+      
+      # 格式化代码
+      - name: Format code
+        run: dart format .
+
+      # 执行所有测试
+      - name: Run tests
+        run: flutter test
+
+      # 静态分析
+      - name: Static analysis
+        run: flutter analyze
+
+      # - name: Publish to pub.dev
+      #   run: dart pub publish --force
+      #   env:
+      #     PUB_DEV_TOKEN: ${{ secrets.PUB_DEV_TOKEN }}

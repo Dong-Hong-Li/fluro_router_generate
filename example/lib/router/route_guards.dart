@@ -4,8 +4,8 @@ import 'package:fluro_router_generate/fluro_router.dart';
 ///
 /// - guard1 通过后仍会继续执行 guard2
 /// - 每个守卫都可能 suspend（挂起同一次跳转的 Future）→ 去认证页 B → 成功后 resume
-bool guard1Passed = false;
-bool guard2Passed = false;
+bool guard1Passed = true;
+bool guard2Passed = true;
 
 /// 需要登录才能访问的路径前缀（示例里把 C 页也保护起来）
 const _protectedPathPrefixes = ['/detail', '/user/', '/search', '/c'];
@@ -43,6 +43,7 @@ Future<GuardResult> authGuard1(RouteGuardContext ctx) async {
           guard1Passed = true;
           if (!context.mounted) return;
           await Future.delayed(const Duration(seconds: 1));
+          // ignore: use_build_context_synchronously
           await FluroConfig.resumePendingRoute<bool>(context);
         } else {
           FluroConfig.clearPendingRoute();

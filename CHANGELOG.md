@@ -2,6 +2,24 @@
 
 ---
 
+## 1.3.1
+
+**English**
+
+- **Deferred Components**: Support `RouteLoadMode.deferred` in `@RouterAnnotation`. Generator emits `import ... deferred as ...`, `loadLibrary()`, and `DeferredRoutePage`. Optional `deferredGroup` and `deferredComponent` for grouping and Android deferred-components mapping.
+- **Deferred UI config**: Global and per-path loading/error UI for deferred routes via `FluroConfig.deferredRouteUIOptions` and `FluroConfig.setDeferredBuildersForPath(path, loading: ..., error: ...)`. Generated code calls `FluroConfig.deferredLoadingBuilderFor(path)` and `FluroConfig.deferredErrorBuilderFor(path)` so custom builders apply when set.
+- **Build config**: Optional `default_load_mode: eager|deferred` in builder `options` for global default.
+- **Docs**: README/README_zh and example updated with full Deferred Components flow (Dart + Android `pubspec.yaml`), and FluroConfig deferred UI usage.
+
+**中文**
+
+- **Deferred Components**：`@RouterAnnotation` 支持 `RouteLoadMode.deferred`。生成器产出 `import ... deferred as ...`、`loadLibrary()` 与 `DeferredRoutePage`。可选 `deferredGroup`、`deferredComponent` 用于分组及 Android 动态组件映射。
+- **Deferred 加载/失败 UI 配置**：通过 `FluroConfig.deferredRouteUIOptions` 设置全局默认，通过 `FluroConfig.setDeferredBuildersForPath(path, loading: ..., error: ...)` 按路径覆盖。生成代码会使用 `FluroConfig.deferredLoadingBuilderFor(path)` 与 `FluroConfig.deferredErrorBuilderFor(path)`，配置后即生效。
+- **构建配置**：builder 的 `options` 支持 `default_load_mode: eager|deferred` 作为全局默认。
+- **文档**：README/README_zh 与 example 补充完整 Deferred Components 流程（Dart + Android `pubspec.yaml`）及 FluroConfig deferred UI 用法。
+
+---
+
 ## 1.2.0
 
 **English**

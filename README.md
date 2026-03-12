@@ -3,34 +3,48 @@
 ---
 
 [![pub package](https://img.shields.io/pub/v/fluro_router_generate.svg)](https://pub.dev/packages/fluro_router_generate)
+[![Dart CI](https://github.com/Dong-Hong-Li/fluro_router_generate/actions/workflows/dart.yml/badge.svg)](https://github.com/Dong-Hong-Li/fluro_router_generate/actions/workflows/dart.yml)
 [![License](https://img.shields.io/badge/license-Artistic%202.0-blue.svg)](https://github.com/Dong-Hong-Li/fluro_router_generate/blob/main/LICENSE)
 
 # fluro_router_generate
 
-Fluro-based routing for Flutter with **annotations and code generation**.  
-Register routes automatically via `@RouterAnnotation`, with path params, query params, and `RouteSettings.arguments`. Supports animated transitions and custom navigation.
+**A code-generation router layer for Fluro users who want typed params, annotations, and less boilerplate.**
 
-**Repositories**  
-- **GitHub:** [github.com/Dong-Hong-Li/fluro_router_generate](https://github.com/Dong-Hong-Li/fluro_router_generate) — `git clone https://github.com/Dong-Hong-Li/fluro_router_generate.git`  
-- **Gitee:** [gitee.com/lidonghonglalala/fluro_router_generate](https://gitee.com/lidonghonglalala/fluro_router_generate) — `git clone https://gitee.com/lidonghonglalala/fluro_router_generate.git`
+You stay on [Fluro](https://github.com/lukepighetti/fluro)—same `FluroRouter`, same transitions—but define routes with `@RouterAnnotation` and get generated handlers, typed path/query/arguments, route guards, and optional deferred loading. No need to hand-write `define` + `FluroHandler` for every screen.
+
+**Repositories:** [GitHub](https://github.com/Dong-Hong-Li/fluro_router_generate) · [Gitee](https://gitee.com/lidonghonglalala/fluro_router_generate)
 
 ---
 
-## 1. Dependencies
+## Fluro vs others
+
+| | **fluro** | **fluro_router_generate** | **go_router** | **auto_route** |
+|---|:---:|:---:|:---:|:---:|
+| Built on | — | Fluro | Navigator 2.0 | Navigator 2.0 |
+| Route definition | Manual `define` + handler | **Annotations + code gen** | Declarative config | Annotations + code gen |
+| Typed path/query/args | Hand-written | **Generated** | Yes | Yes |
+| Boilerplate | High | **Low** | Low | Low |
+| Migrate from existing Fluro | — | **Drop-in layer** | Rewrite | Rewrite |
+| Deferred loading | Manual | **Generated** | Manual | Supported |
+
+*Use this library when you already use (or want) Fluro and need less manual wiring and better type safety.*
+
+---
+
+## Quick start (~3 minutes)
+
+**1. Add dependency**
 
 ```yaml
 dependencies:
-  fluro_router_generate: ^1.2.0  # or path: ../ for local
-
+  fluro_router_generate: ^1.3.1  # or path: ../ for local
 dev_dependencies:
   build_runner: ^2.10.5
 ```
 
----
+**2. Create route entry and configure build.yaml**
 
-## 2. Create route entry
-
-In `lib/xxxx.dart`:
+In `lib/router/router_config.dart` (or your chosen entry file):
 
 ```dart
 import 'package:fluro_router_generate/fluro_router_generate.dart';
@@ -43,9 +57,104 @@ class RouteConfig extends FluroConfig {
 }
 ```
 
+In the project **root** `build.yaml`, have the builder **only** process that entry file (path must match):
+
+```yaml
+targets:
+  $default:
+    builders:
+      fluro_router_generate|router_library:
+        generate_for:
+          include:
+            - lib/router/router_config.dart
+```
+
+**3. Annotate a page**
+
+```dart
+@RouterAnnotation(path: '/detail/:id', defaultParams: {'id': '0'}, constructorParams: HandlerConstructorParams.pathParams)
+class DetailPage extends StatelessWidget {
+  const DetailPage({super.key, required this.id});
+  final String id;
+  // ... build
+}
+```
+
+**4. Generate**
+
+```bash
+dart run build_runner build --delete-conflicting-outputs
+```
+
+**5. Wire once and navigate**
+
+```dart
+// main.dart
+RouteConfig.instance.initAllHandlers();
+// MaterialApp
+onGenerateRoute: FluroConfig.router.generator,
+
+// Navigate
+FluroConfig.push('/detail/99', context: context);
+```
+
 ---
 
-## 3. Annotate your pages
+## Before vs after (why use code gen)
+
+**Before (plain Fluro):** you repeat path, handler, and parameter parsing for every route.
+
+```dart
+// Repeated for every screen: path string, define call, and manual param parsing
+FluroConfig.router.define(
+  '/detail/:id',
+  handler: FluroHandler(
+    handlerFunc: (context, parameters) {
+      final id = parameters['id']?.first ?? '0';  // string parsing by hand
+      return DetailPage(id: id);
+    },
+  ),
+);
+// Same pattern for /user/:userId/post/:postId, /search?keyword=&page=1, ...
+```
+
+**After (fluro_router_generate):** one annotation on the page; handler and param wiring are generated.
+
+```dart
+@RouterAnnotation(
+  path: '/detail/:id',
+  defaultParams: {'id': '0'},
+  constructorParams: HandlerConstructorParams.pathParams,
+)
+class DetailPage extends StatelessWidget {
+  const DetailPage({super.key, required this.id});
+  final String id;
+  // ...
+}
+// Generated: RouterHandler('/detail/:id', FluroHandler(handlerFunc: (c, p) => DetailPage(id: p['id']?.first ?? '0')))
+```
+
+*Adding a “before/after” screenshot or GIF at this spot will make the value even clearer.*
+
+---
+
+## Why migrate from Fluro?
+
+**If you're already using Fluro, why add this?**
+
+- **Less boilerplate.** Every route no longer needs a manual `router.define(path, handler: FluroHandler(handlerFunc: ...))` and hand-written `parameters['x']?.first ?? default`. One `@RouterAnnotation` on the page generates the handler and param passing. For 10 routes you delete dozens of lines of repetitive code.
+- **Typed params and single source of truth.** Path and query params live on the widget constructor; the generator reads them and generates the correct `HandlerFunc`. Change the constructor and re-run build_runner—no hunting for string keys in handler lambdas.
+- **Pain points of raw Fluro we address:**
+  - **Param parsing:** path/query/`RouteSettings.arguments` are generated; you don’t write `parameters['id']?.first` or cast from `arguments` yourself.
+  - **Registration:** no central “route list” to keep in sync with your pages; add a page + annotation and regenerate.
+  - **Guards:** pre-push guards (allow/redirect/cancel/suspend) are built in, so you can do auth or paywall without only relying on `NavigatorObserver`.
+  - **Deferred loading:** optional `RouteLoadMode.deferred` with generated `loadLibrary()` and `DeferredRoutePage`, so you can lazy-load features without hand-rolling async handlers.
+
+You keep Fluro’s API and behavior; you add a code-gen layer that makes it easier to maintain and extend.
+
+---
+
+## 1. Annotate your pages
 
 ```dart
 import 'package:flutter/material.dart';
@@ -65,7 +174,7 @@ class HomePage extends StatelessWidget {
 
 ---
 
-## 4. Configure build.yaml (required)
+## 2. Configure build.yaml (required)
 
 Your **app project** must have a root `build.yaml`, and **only** the file with `@EntranceAnnotation` may trigger the builder:
 
@@ -87,7 +196,7 @@ targets:
 
 ---
 
-## 5. Generate route table
+## 3. Generate route table
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs
@@ -97,7 +206,7 @@ This generates `router_config.router.g.dart` with `generatedHandlers` and `initA
 
 ---
 
-## 6. Initialize in main and use
+## 4. Initialize in main and use
 
 ```dart
 import 'package:fluro_router_generate/fluro_router_generate.dart';
@@ -117,7 +226,7 @@ FluroConfig.router.navigateTo(context, '/home/1');
 
 ---
 
-## 7. Route guards (optional)
+## 5. Route guards (optional)
 
 Guards run **before** each `Navigator.push`, so you can allow, redirect, cancel, or **suspend** navigation. This is different from `NavigatorObserver`, which only runs after push/pop.
 
@@ -175,6 +284,9 @@ FluroConfig.addGuard((ctx) async {
 | `defaultParams` | Optional, default values, e.g. `{'id': '-', 'page': 1}` |
 | `constructorParams` | Optional: `pathParams` / `queryParams` / `routeSettingsArguments` / `none` — how params are passed to the constructor |
 | `module` | Optional, module name for grouping/splitting; with build.yaml `split_modules` can emit a separate `.router.g.dart` |
+| `loadMode` | Optional: `RouteLoadMode.eager` (default) / `RouteLoadMode.deferred` |
+| `deferredGroup` | Optional, stable deferred import prefix grouping |
+| `deferredComponent` | Optional, component hint for Android deferred components mapping |
 
 See `example/` for more.
 
@@ -328,6 +440,148 @@ targets:
 ```
 
 Modules not in `split_modules` are inlined into the main generated file. See `example/` for a full sample.
+
+---
+
+### 4. Deferred route loading
+
+Use `RouteLoadMode.deferred` on a page annotation to generate `deferred import` and runtime `loadLibrary()` loading:
+
+```dart
+@RouterAnnotation(
+  path: '/search?keyword=&page=1',
+  module: 'feature',
+  constructorParams: HandlerConstructorParams.queryParams,
+  loadMode: RouteLoadMode.deferred,
+  deferredGroup: 'search_feature',
+  deferredComponent: 'search_component',
+)
+class SearchPage extends StatelessWidget { ... }
+```
+
+Generated code uses `DeferredRoutePage` internally to keep `FluroHandler` synchronous while loading deferred libraries asynchronously.
+
+You can also set a global default in `build.yaml`:
+
+```yaml
+targets:
+  $default:
+    builders:
+      fluro_router_generate|router_library:
+        options:
+          default_load_mode: eager # eager|deferred
+```
+
+**Custom loading/error UI (optional)**  
+Generated code uses `FluroConfig.deferredLoadingBuilderFor(path)` and `FluroConfig.deferredErrorBuilderFor(path)`. Set before `initAllHandlers()`:
+
+- **Global default**: `FluroConfig.deferredRouteUIOptions = DeferredRouteUIOptions(loadingBuilder: ..., errorBuilder: ...);`
+- **Per-path override**: `FluroConfig.setDeferredBuildersForPath('/search?keyword=&page=1', loading: ..., error: ...);`
+
+If unset, `DeferredRoutePage` uses its built-in loading and error UI.
+
+> Note: this is the **Dart deferred import** part. For Android App Bundle **Deferred Components** (dynamic delivery), you must also configure the app project.
+
+#### Full example: Dart deferred + Android Deferred Components
+
+**Step 1: Page annotation (code level)**
+
+```dart
+@RouterAnnotation(
+  path: '/search?keyword=&page=1',
+  module: 'feature',
+  constructorParams: HandlerConstructorParams.queryParams,
+  loadMode: RouteLoadMode.deferred,
+  deferredGroup: 'search_feature',
+  deferredComponent: 'search_component', // Android dynamic module name
+)
+class SearchPage extends StatelessWidget {
+  const SearchPage({super.key, required this.keyword, required this.page});
+  final String keyword;
+  final String page;
+  // ...
+}
+```
+
+**Step 2: Generate route code**
+
+```bash
+dart run build_runner build --delete-conflicting-outputs
+```
+
+You will get generated code similar to:
+
+```dart
+import 'package:example/pages/search_page.dart' deferred as deferred_search_feature_xxx;
+
+RouterHandler(
+  '/search?keyword=&page=1',
+  FluroHandler(
+    handlerFunc: (context, parameters) => DeferredRoutePage(
+      loader: () => deferred_search_feature_xxx.loadLibrary(),
+      builder: (context) => deferred_search_feature_xxx.SearchPage(...),
+      debugLabel: '/search?keyword=&page=1',
+      loadingBuilder: FluroConfig.deferredLoadingBuilderFor('/search?keyword=&page=1'),
+      errorBuilder: FluroConfig.deferredErrorBuilderFor('/search?keyword=&page=1'),
+    ),
+  ),
+),
+```
+
+**Step 3: App-side `pubspec.yaml` (platform level)**
+
+In your app `pubspec.yaml`, declare the deferred component (example):
+
+```yaml
+flutter:
+  deferred-components:
+    - name: search_component
+      libraries:
+        - package:example/pages/search_page.dart
+      # optional assets for this component
+      # assets:
+      #   - assets/search/**
+```
+
+`name` should match the annotation field `deferredComponent` (for example, both are `search_component`).
+
+**Step 4: Build and verify**
+
+- Local debug/profile usually verifies only the Dart deferred path (`loadLibrary()` + `DeferredRoutePage`).
+- Real Deferred Components behavior should be verified via Android App Bundle dynamic delivery flow.
+
+**Step 5: Regression checklist**
+
+- First entry to deferred route shows loading then target page.
+- Second entry should avoid re-downloading/re-initializing the same module (depends on platform/runtime cache).
+- Works with guards, `split_modules`, and `routeSettingsArguments`.
+
+#### Common pitfall
+
+- `loadMode: deferred` does **not** automatically finish Android dynamic module setup.
+- `deferredComponent` is currently a mapping declaration field; actual dynamic delivery depends on app-side configuration and packaging.
+
+#### When loadLibrary runs & large modules (live, video editing)
+
+- **When does loadLibrary run?** The **first time** you navigate to that route **in the current process**; later navigations in the same process do not load again. After a **new app launch (new process)**, the first navigation to that route runs it again. If the user never opens that route, it is never loaded.
+- **Very large modules?**
+  1. **Preload**: Call `FluroConfig.registerDeferredLoader(path, () => your_deferred.loadLibrary())` and then `FluroConfig.preloadDeferredRoute(path)` when appropriate (e.g. after home is ready or when entering a discovery tab), so the module is ready before the user opens that route.
+  2. Use a **wrapper** for clear loading/progress or “first load ~xx MB” and optional cancel.
+  3. **Split by feature**: e.g. separate deferred libs for live vs. editing, so only what’s needed is loaded.
+  4. **True on-demand download**: Use Android Deferred Components + Play for download size; loadLibrary after the component is installed.
+
+**Preload example:**
+
+```dart
+// 1) Import the same deferred lib and register (path must match the annotation)
+import 'package:your_app/pages/live_page.dart' deferred as live_lib;
+
+FluroConfig.registerDeferredLoader('/live', () => live_lib.loadLibrary());
+
+// 2) Preload when home is ready or user enters discovery
+FluroConfig.preloadDeferredRoute('/live');
+// Or preload all registered: FluroConfig.preloadAllDeferredRoutes();
+```
 
 ---
 

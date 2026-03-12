@@ -19,6 +19,7 @@ export 'src/extension.dart';
 // Strategies
 export 'src/strategy/transition_effect.dart';
 export 'src/strategy/swipe_back_wrapper.dart';
+export 'src/widgets/deferred_route_page.dart';
 
 // Code generation
 export 'src/generate/annotation/router_annotation.dart';

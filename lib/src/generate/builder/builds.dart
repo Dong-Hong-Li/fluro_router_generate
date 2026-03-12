@@ -21,6 +21,14 @@ Set<String> _resolveSplitModules(BuilderOptions options) {
   return {...defaultSplitModules, ...extra};
 }
 
+/// 从 [BuilderOptions] 解析默认加载模式（eager/deferred）。
+String _resolveDefaultLoadMode(BuilderOptions options) {
+  final raw = options.config['default_load_mode'];
+  if (raw is! String) return 'eager';
+  final value = raw.trim().toLowerCase();
+  return value == 'deferred' ? 'deferred' : 'eager';
+}
+
 /// 仅对带 [EntranceAnnotation] 的入口文件运行，绝不对全量 .dart 跑。
 /// 若当前输入未标注入口注解，直接报错并提示配置 build.yaml。
 /// 支持分文件：主文件 + 各模块文件；允许拆分的模块 = [defaultSplitModules] + build.yaml 的 split_modules。
@@ -29,6 +37,7 @@ class RouterTableBuilder implements Builder {
 
   final BuilderOptions _options;
   late final Set<String> _splitModules = _resolveSplitModules(_options);
+  late final String _defaultLoadMode = _resolveDefaultLoadMode(_options);
 
   /// 同一次 build 中若曾对非入口文件报错，则不再写入任何输出。
   static bool _sawNonEntryFileInThisRun = false;
@@ -38,7 +47,10 @@ class RouterTableBuilder implements Builder {
 
   @override
   Map<String, List<String>> get buildExtensions => {
-    '.dart': [_outputSuffix, for (final m in _splitModules) '_$m$_outputSuffix'],
+    '.dart': [
+      _outputSuffix,
+      for (final m in _splitModules) '_$m$_outputSuffix',
+    ],
   };
 
   static const String _configHint = '''
@@ -65,6 +77,7 @@ targets:
     final outputs = await generateRouterTableContent(
       buildStep,
       allowedSplitModules: _splitModules,
+      defaultLoadMode: _defaultLoadMode,
     );
     if (outputs.isEmpty) {
       _sawNonEntryFileInThisRun = true;
@@ -83,7 +96,9 @@ targets:
     for (final entry in outputs.entries) {
       final key = entry.key;
       final content = entry.value;
-      final path = key.isEmpty ? '$basePath$_outputSuffix' : '${basePath}_$key$_outputSuffix';
+      final path = key.isEmpty
+          ? '$basePath$_outputSuffix'
+          : '${basePath}_$key$_outputSuffix';
       await buildStep.writeAsString(AssetId(package, path), content);
     }
   }

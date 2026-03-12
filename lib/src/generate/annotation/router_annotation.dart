@@ -12,6 +12,15 @@ enum HandlerConstructorParams {
   routeSettingsArguments,
 }
 
+/// 路由页面加载模式
+enum RouteLoadMode {
+  /// 默认行为：同步导入并立即构建页面。
+  eager,
+
+  /// 使用 `deferred import` + `loadLibrary()` 延迟加载页面代码。
+  deferred,
+}
+
 /// 路由注解
 class RouterAnnotation {
   /// 路由路径。支持 FluroRouter 自带传参：
@@ -80,12 +89,30 @@ class RouterAnnotation {
   /// ```
   final HandlerConstructorParams constructorParams;
 
+  /// 路由页面加载模式。
+  ///
+  /// 默认值为 [RouteLoadMode.eager]，保持向后兼容。
+  final RouteLoadMode loadMode;
+
+  /// deferred 分组名（可选）。
+  ///
+  /// 当 [loadMode] 为 [RouteLoadMode.deferred] 时，可为同一组路由复用同一个库前缀。
+  final String? deferredGroup;
+
+  /// 可选的 deferred component 名称（用于与 Android deferred components 配置对齐）。
+  ///
+  /// 该字段仅用于生成注释和映射信息，不直接参与 Dart import 解析。
+  final String? deferredComponent;
+
   const RouterAnnotation({
     required this.path,
     this.defaultParams,
     this.description,
     this.module,
     this.constructorParams = HandlerConstructorParams.none,
+    this.loadMode = RouteLoadMode.eager,
+    this.deferredGroup,
+    this.deferredComponent,
   });
 }
 

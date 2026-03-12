@@ -26,6 +26,27 @@ class MyApp extends StatelessWidget {
       FluroConfig.addGuard(authGuard2);
       FluroConfig.addGuard(loggingGuard2);
 
+      // 为 search 这条 Deferred 路由单独设置加载中/失败界面（path 必须与 SearchPage 注解里的 path 一致）
+      FluroConfig.setDeferredBuildersForPath(
+        '/search?keyword=&page=1',
+        loading: (context, _) => const Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('搜索模块加载中…'),
+              ],
+            ),
+          ),
+        ),
+        error: (context, error, _) => Scaffold(
+          appBar: AppBar(title: const Text('加载失败')),
+          body: Center(child: Text('$error')),
+        ),
+      );
+
       // 注册生成的路由（注解生成的路由）
       RouteConfig.instance.initAllHandlers();
 
@@ -41,9 +62,7 @@ class MyApp extends StatelessWidget {
       );
       FluroConfig.router.define(
         '/c',
-        handler: FluroHandler(
-          handlerFunc: (_, __) => const CPage(),
-        ),
+        handler: FluroHandler(handlerFunc: (_, __) => const CPage()),
       );
     }
 

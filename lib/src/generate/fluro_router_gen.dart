@@ -15,6 +15,8 @@ const List<String> _constructorParamsNames = [
   'routeSettingsArguments',
 ];
 
+const List<String> _loadModeNames = ['eager', 'deferred'];
+
 /// 将注解中的 constructorParams 转为字符串：pathParams / queryParams / routeSettingsArguments / none
 String _readConstructorParams(ConstantReader annotation) {
   try {
@@ -25,7 +27,7 @@ String _readConstructorParams(ConstantReader annotation) {
     final indexObj = cr.objectValue.getField('index');
     if (indexObj != null) {
       final i = indexObj.toIntValue();
-       if (i != null && i >= 0 && i < _constructorParamsNames.length) {
+      if (i != null && i >= 0 && i < _constructorParamsNames.length) {
         return _constructorParamsNames[i];
       }
     }
@@ -37,6 +39,27 @@ String _readConstructorParams(ConstantReader annotation) {
     }
   } catch (_) {}
   return 'none';
+}
+
+/// 将注解中的 loadMode 转为字符串：eager / deferred
+String _readLoadMode(ConstantReader annotation, {String fallback = 'eager'}) {
+  try {
+    final cr = annotation.peek('loadMode');
+    if (cr == null || cr.isNull) return fallback;
+    final indexObj = cr.objectValue.getField('index');
+    if (indexObj != null) {
+      final i = indexObj.toIntValue();
+      if (i != null && i >= 0 && i < _loadModeNames.length) {
+        return _loadModeNames[i];
+      }
+    }
+    final accessor = cr.revive().accessor;
+    if (accessor.isNotEmpty && accessor.contains('.')) {
+      final name = accessor.split('.').last;
+      if (_loadModeNames.contains(name)) return name;
+    }
+  } catch (_) {}
+  return fallback;
 }
 
 /// 从 defaultParams 值推断类型：int/double/bool -> 生成解析代码，否则当 string
@@ -178,13 +201,17 @@ const Set<String> defaultSplitModules = {};
 Future<GeneratedOutputs> generateRouterTableContent(
   BuildStep buildStep, {
   Set<String>? allowedSplitModules,
+  String defaultLoadMode = 'eager',
 }) async {
   final splitModules = allowedSplitModules ?? defaultSplitModules;
 
   final configClass = await _getEntranceConfigClass(buildStep);
   if (configClass == null) return {};
 
-  final List<_RouteEntry> entries = await _collectAnnotatedRoutes(buildStep);
+  final List<_RouteEntry> entries = await _collectAnnotatedRoutes(
+    buildStep,
+    defaultLoadMode: defaultLoadMode,
+  );
   if (entries.isEmpty) return {};
 
   final grouped = <String, List<_RouteEntry>>{};
@@ -231,18 +258,11 @@ Future<GeneratedOutputs> generateRouterTableContent(
     mainBuffer.writeln("import '$partUri' as $prefix;");
   }
   if (inlineModules.isNotEmpty) {
-    final uris = <String>{};
+    final inlineEntries = <_RouteEntry>[];
     for (final moduleName in inlineModules) {
-      for (final e in grouped[moduleName]!) {
-        if (e.importUri.isNotEmpty) uris.add(e.importUri);
-        for (final u in e.paramTypeImportUris) {
-          if (u != null && u.isNotEmpty) uris.add(u);
-        }
-      }
+      inlineEntries.addAll(grouped[moduleName]!);
     }
-    for (final uri in uris.toList()..sort()) {
-      mainBuffer.writeln("import '$uri';");
-    }
+    _writeEntriesImports(mainBuffer, inlineEntries);
   }
   mainBuffer.writeln();
   _writeExtensionMergeOnly(
@@ -294,20 +314,74 @@ String _moduleFileImportUri(
   return 'package:$package/${path}_$moduleName.router.g.dart';
 }
 
+String _sanitizeIdentifier(String input) {
+  final clean = input.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+  if (clean.isEmpty) return 'lib';
+  if (RegExp(r'^[0-9]').hasMatch(clean)) return 'lib_$clean';
+  return clean;
+}
+
+String _deferredPrefixFor(_RouteEntry e) {
+  final uriHash = e.importUri.hashCode.abs();
+  final group = e.deferredGroup?.trim();
+  if (group != null && group.isNotEmpty) {
+    return 'deferred_${_sanitizeIdentifier(group).toLowerCase()}_$uriHash';
+  }
+  final base = '${e.className}_$uriHash';
+  return 'deferred_${_sanitizeIdentifier(base).toLowerCase()}';
+}
+
+class _DeferredImportRecord {
+  const _DeferredImportRecord({required this.uri, required this.prefix});
+
+  final String uri;
+  final String prefix;
+}
+
+List<_DeferredImportRecord> _collectDeferredImports(List<_RouteEntry> entries) {
+  final seenByPrefix = <String, String>{};
+  final records = <_DeferredImportRecord>[];
+  for (final e in entries) {
+    if (!e.isDeferred) continue;
+    final prefix = e.deferredPrefix;
+    final uri = e.importUri;
+    final existing = seenByPrefix[prefix];
+    if (existing == uri) continue;
+    if (existing != null && existing != uri) continue;
+    seenByPrefix[prefix] = uri;
+    records.add(_DeferredImportRecord(uri: uri, prefix: prefix));
+  }
+  records.sort((a, b) {
+    final byUri = a.uri.compareTo(b.uri);
+    if (byUri != 0) return byUri;
+    return a.prefix.compareTo(b.prefix);
+  });
+  return records;
+}
+
+void _writeEntriesImports(StringBuffer buffer, List<_RouteEntry> entries) {
+  final eagerUris = <String>{};
+  for (final e in entries) {
+    if (!e.isDeferred && e.importUri.isNotEmpty) eagerUris.add(e.importUri);
+    for (final typeUri in e.paramTypeImportUris) {
+      if (typeUri != null && typeUri.isNotEmpty) eagerUris.add(typeUri);
+    }
+  }
+  final sortedEagerUris = eagerUris.toList()..sort();
+  for (final uri in sortedEagerUris) {
+    buffer.writeln("import '$uri';");
+  }
+
+  final deferredRecords = _collectDeferredImports(entries);
+  for (final item in deferredRecords) {
+    buffer.writeln("import '${item.uri}' deferred as ${item.prefix};");
+  }
+}
+
 /// 写入单模块文件的 import（仅该模块用到的页面 + fluro_router）。
 void _writeModuleImports(StringBuffer buffer, List<_RouteEntry> entries) {
   buffer.writeln("import 'package:fluro_router_generate/fluro_router.dart';");
-  final uris = <String>{};
-  for (final e in entries) {
-    if (e.importUri.isNotEmpty) uris.add(e.importUri);
-    for (final typeUri in e.paramTypeImportUris) {
-      if (typeUri != null && typeUri.isNotEmpty) uris.add(typeUri);
-    }
-  }
-  final sortedUris = uris.toList()..sort();
-  for (final uri in sortedUris) {
-    buffer.writeln("import '$uri';");
-  }
+  _writeEntriesImports(buffer, entries);
   buffer.writeln();
 }
 
@@ -326,6 +400,12 @@ void _writeModuleHandlers(
         ? e.description!
         : e.className;
     buffer.writeln('  /// $comment');
+    if (e.isDeferred) {
+      buffer.writeln('  /// loadMode: deferred');
+      if (e.deferredComponent != null && e.deferredComponent!.isNotEmpty) {
+        buffer.writeln('  /// deferredComponent: ${e.deferredComponent}');
+      }
+    }
     final handlerCall = _buildHandlerCall(e);
     buffer.writeln("  RouterHandler('${_escapePath(e.path)}', $handlerCall),");
     if (i < list.length - 1) buffer.writeln();
@@ -356,6 +436,12 @@ void _writeExtensionMergeOnly(
           ? e.description!
           : e.className;
       buffer.writeln('    /// $comment');
+      if (e.isDeferred) {
+        buffer.writeln('    /// loadMode: deferred');
+        if (e.deferredComponent != null && e.deferredComponent!.isNotEmpty) {
+          buffer.writeln('    /// deferredComponent: ${e.deferredComponent}');
+        }
+      }
       final handlerCall = _buildHandlerCall(e);
       buffer.writeln(
         "    RouterHandler('${_escapePath(e.path)}', $handlerCall),",
@@ -397,7 +483,10 @@ void _writeExtensionMergeOnly(
 class FluroRouterLibraryGenerator extends Generator {
   @override
   Future<String> generate(LibraryReader library, BuildStep buildStep) async {
-    final out = await generateRouterTableContent(buildStep);
+    final out = await generateRouterTableContent(
+      buildStep,
+      defaultLoadMode: 'eager',
+    );
     return out[''] ?? '';
   }
 }
@@ -465,13 +554,17 @@ String _escapePath(String path) => path.replaceAll("'", "\\'");
 
 /// 根据 constructorParams 生成 handlerFunc 的调用表达式（单行或多行）
 String _buildHandlerCall(_RouteEntry e) {
+  if (e.isDeferred) return _buildDeferredHandlerCall(e);
+  return _buildDirectHandlerCall(e, classRef: e.className);
+}
+
+String _buildDirectHandlerCall(_RouteEntry e, {required String classRef}) {
   final cp = e.constructorParams;
-  final className = e.className;
 
   if (cp == 'pathParams') {
     final names = pathParamNames(e.path);
     if (names.isEmpty) {
-      return 'FluroHandler(handlerFunc: (context, parameters) => $className())';
+      return 'FluroHandler(handlerFunc: (context, parameters) => $classRef())';
     }
     final defaults = names.map((n) {
       final i = e.paramKeys.indexOf(n);
@@ -482,14 +575,14 @@ String _buildHandlerCall(_RouteEntry e) {
       final d = defaults[i].replaceAll("'", "\\'");
       return '$n: parameters[\'$n\']?.first ?? \'$d\'';
     }).join(', ');
-    return 'FluroHandler(handlerFunc: (context, parameters) => $className($args))';
+    return 'FluroHandler(handlerFunc: (context, parameters) => $classRef($args))';
   }
 
   if (cp == 'queryParams') {
     final pathNames = queryParamNames(e.path);
     final names = pathNames.isNotEmpty ? pathNames : e.paramKeys;
     if (names.isEmpty) {
-      return 'FluroHandler(handlerFunc: (context, parameters) => $className())';
+      return 'FluroHandler(handlerFunc: (context, parameters) => $classRef())';
     }
     final defaults = names.map((n) {
       final i = e.paramKeys.indexOf(n);
@@ -500,12 +593,12 @@ String _buildHandlerCall(_RouteEntry e) {
       final d = defaults[i].replaceAll("'", "\\'");
       return '$n: parameters[\'$n\']?.first ?? \'$d\'';
     }).join(', ');
-    return 'FluroHandler(handlerFunc: (context, parameters) => $className($args))';
+    return 'FluroHandler(handlerFunc: (context, parameters) => $classRef($args))';
   }
 
   if (cp == 'routeSettingsArguments') {
     if (e.paramKeys.isEmpty) {
-      return 'FluroHandler(handlerFunc: (context, parameters) => $className())';
+      return 'FluroHandler(handlerFunc: (context, parameters) => $classRef())';
     }
     const indent = '      ';
     final sb = StringBuffer();
@@ -544,16 +637,118 @@ String _buildHandlerCall(_RouteEntry e) {
       }
     }
     final ctorArgs = e.paramKeys.map((k) => '$k: $k').join(', ');
-    sb.writeln('$indent return $className($ctorArgs);');
+    sb.writeln('$indent return $classRef($ctorArgs);');
     sb.write('    })');
     return sb.toString();
   }
 
   // none
   if (e.hasPathOrQueryParams) {
-    return 'FluroHandler(handlerFunc: (context, parameters) => $className(parameters: parameters))';
+    return 'FluroHandler(handlerFunc: (context, parameters) => $classRef(parameters: parameters))';
   }
-  return 'FluroHandler(handlerFunc: (context, parameters) => $className())';
+  return 'FluroHandler(handlerFunc: (context, parameters) => $classRef())';
+}
+
+String _buildDeferredHandlerCall(_RouteEntry e) {
+  final cp = e.constructorParams;
+  final classRef = '${e.deferredPrefix}.${e.className}';
+  final loader = '${e.deferredPrefix}.loadLibrary()';
+  const indent = '      ';
+
+  if (cp == 'pathParams') {
+    final names = pathParamNames(e.path);
+    final args = names
+        .map((n) {
+          final i = e.paramKeys.indexOf(n);
+          final d =
+              (i >= 0 && i < e.paramDefaults.length ? e.paramDefaults[i] : '')
+                  .replaceAll("'", "\\'");
+          return '$n: parameters[\'$n\']?.first ?? \'$d\'';
+        })
+        .join(', ');
+    final pageExpr = names.isEmpty ? '$classRef()' : '$classRef($args)';
+    final pathArg = _escapePath(e.path);
+    return "FluroHandler(handlerFunc: (context, parameters) => DeferredRoutePage(loader: () => $loader, builder: (context) => $pageExpr, debugLabel: '$pathArg', loadingBuilder: FluroConfig.deferredLoadingBuilderFor('$pathArg'), errorBuilder: FluroConfig.deferredErrorBuilderFor('$pathArg'), wrapper: FluroConfig.deferredWrapperFor('$pathArg')))";
+  }
+
+  if (cp == 'queryParams') {
+    final pathNames = queryParamNames(e.path);
+    final names = pathNames.isNotEmpty ? pathNames : e.paramKeys;
+    final args = names
+        .map((n) {
+          final i = e.paramKeys.indexOf(n);
+          final d =
+              (i >= 0 && i < e.paramDefaults.length ? e.paramDefaults[i] : '')
+                  .replaceAll("'", "\\'");
+          return '$n: parameters[\'$n\']?.first ?? \'$d\'';
+        })
+        .join(', ');
+    final pageExpr = names.isEmpty ? '$classRef()' : '$classRef($args)';
+    final pathArg = _escapePath(e.path);
+    return "FluroHandler(handlerFunc: (context, parameters) => DeferredRoutePage(loader: () => $loader, builder: (context) => $pageExpr, debugLabel: '$pathArg', loadingBuilder: FluroConfig.deferredLoadingBuilderFor('$pathArg'), errorBuilder: FluroConfig.deferredErrorBuilderFor('$pathArg'), wrapper: FluroConfig.deferredWrapperFor('$pathArg')))";
+  }
+
+  if (cp == 'routeSettingsArguments') {
+    final pathArg = _escapePath(e.path);
+    if (e.paramKeys.isEmpty) {
+      return "FluroHandler(handlerFunc: (context, parameters) => DeferredRoutePage(loader: () => $loader, builder: (context) => $classRef(), debugLabel: '$pathArg', loadingBuilder: FluroConfig.deferredLoadingBuilderFor('$pathArg'), errorBuilder: FluroConfig.deferredErrorBuilderFor('$pathArg'), wrapper: FluroConfig.deferredWrapperFor('$pathArg')))";
+    }
+    final sb = StringBuffer();
+    sb.writeln(
+      'FluroHandler(handlerFunc: (context, parameters) => DeferredRoutePage(',
+    );
+    sb.writeln('$indent loader: () => $loader,');
+    sb.writeln('$indent debugLabel: \'$pathArg\',');
+    sb.writeln('$indent loadingBuilder: FluroConfig.deferredLoadingBuilderFor(\'$pathArg\'),');
+    sb.writeln('$indent errorBuilder: FluroConfig.deferredErrorBuilderFor(\'$pathArg\'),');
+    sb.writeln('$indent wrapper: FluroConfig.deferredWrapperFor(\'$pathArg\'),');
+    sb.writeln('$indent builder: (context) {');
+    sb.writeln('$indent   final arguments = context.arguments;');
+    sb.writeln(
+      '$indent   final argsMap = arguments is Map<dynamic, dynamic> ? arguments : null;',
+    );
+    for (var i = 0; i < e.paramKeys.length; i++) {
+      final k = e.paramKeys[i];
+      final d = (i < e.paramDefaults.length ? e.paramDefaults[i] : '')
+          .replaceAll("'", "\\'");
+      final typeName = i < e.paramTypeNames.length ? e.paramTypeNames[i] : '';
+      final fromCtor = typeName.isNotEmpty;
+      final isObjectType = fromCtor && !_isPrimitiveOrStringType(typeName);
+      if (isObjectType) {
+        sb.writeln("$indent   final $k = argsMap?['$k'] as $typeName;");
+      } else {
+        final prim = i < e.paramTypes.length ? e.paramTypes[i] : 'string';
+        if (prim == 'int') {
+          sb.writeln(
+            "$indent   final $k = int.tryParse(argsMap?['$k']?.toString() ?? '') ?? ${d.isEmpty ? '0' : d};",
+          );
+        } else if (prim == 'double') {
+          sb.writeln(
+            "$indent   final $k = double.tryParse(argsMap?['$k']?.toString() ?? '') ?? ${d.isEmpty ? '0.0' : d};",
+          );
+        } else if (prim == 'bool') {
+          sb.writeln(
+            "$indent   final $k = (argsMap?['$k']?.toString() ?? '$d').toLowerCase() == 'true';",
+          );
+        } else {
+          sb.writeln(
+            "$indent   final $k = argsMap?['$k']?.toString() ?? '$d';",
+          );
+        }
+      }
+    }
+    final ctorArgs = e.paramKeys.map((k) => '$k: $k').join(', ');
+    sb.writeln('$indent   return $classRef($ctorArgs);');
+    sb.writeln('$indent },');
+    sb.write('    )');
+    return sb.toString();
+  }
+
+  final pathArg = _escapePath(e.path);
+  if (e.hasPathOrQueryParams) {
+    return "FluroHandler(handlerFunc: (context, parameters) => DeferredRoutePage(loader: () => $loader, builder: (context) => $classRef(parameters: parameters), debugLabel: '$pathArg', loadingBuilder: FluroConfig.deferredLoadingBuilderFor('$pathArg'), errorBuilder: FluroConfig.deferredErrorBuilderFor('$pathArg'), wrapper: FluroConfig.deferredWrapperFor('$pathArg')))";
+  }
+  return "FluroHandler(handlerFunc: (context, parameters) => DeferredRoutePage(loader: () => $loader, builder: (context) => $classRef(), debugLabel: '$pathArg', loadingBuilder: FluroConfig.deferredLoadingBuilderFor('$pathArg'), errorBuilder: FluroConfig.deferredErrorBuilderFor('$pathArg'), wrapper: FluroConfig.deferredWrapperFor('$pathArg')))";
 }
 
 /// 将 module 名转为合法的 getter 后缀（如 default -> Default, user-profile -> UserProfile）
@@ -632,7 +827,10 @@ String _moduleToLibraryPrefix(String module) {
 // }
 
 /// 用 findAssets 扫描当前包 lib/**/*.dart，再对每个 asset libraryFor 收集带注解的类。
-Future<List<_RouteEntry>> _collectAnnotatedRoutes(BuildStep buildStep) async {
+Future<List<_RouteEntry>> _collectAnnotatedRoutes(
+  BuildStep buildStep, {
+  required String defaultLoadMode,
+}) async {
   // 携带 [RouterAnnotation] 的类列表
   final package = buildStep.inputId.package;
   final List<_RouteEntry> entries = <_RouteEntry>[];
@@ -643,7 +841,9 @@ Future<List<_RouteEntry>> _collectAnnotatedRoutes(BuildStep buildStep) async {
     if (assetId.package != package) continue;
 
     // 排除生成的路由表文件（.router.g.dart 及其它 .g.dart）
-    if (assetId.path.endsWith('.router.g.dart') || assetId.path.endsWith('.g.dart')) continue;
+    if (assetId.path.endsWith('.router.g.dart') ||
+        assetId.path.endsWith('.g.dart'))
+      continue;
 
     // 获取当前类的库
     final lib = await buildStep.resolver.libraryFor(assetId);
@@ -673,6 +873,7 @@ Future<List<_RouteEntry>> _collectAnnotatedRoutes(BuildStep buildStep) async {
 
         // 获取传入参数的类型
         final constructorParams = _readConstructorParams(reader);
+        final loadMode = _readLoadMode(reader, fallback: defaultLoadMode);
 
         // 获取传入参数的 (键、默认值、类型)
         var (paramKeys, paramDefaults, paramTypes) = _readDefaultParamsMap(
@@ -722,6 +923,8 @@ Future<List<_RouteEntry>> _collectAnnotatedRoutes(BuildStep buildStep) async {
 
         // 获取可选模块名（用于分组生成）
         final module = reader.peek('module')?.stringValue;
+        final deferredGroup = reader.peek('deferredGroup')?.stringValue;
+        final deferredComponent = reader.peek('deferredComponent')?.stringValue;
 
         entries.add(
           _RouteEntry(
@@ -736,6 +939,9 @@ Future<List<_RouteEntry>> _collectAnnotatedRoutes(BuildStep buildStep) async {
             paramTypeImportUris: paramTypeImportUris,
             description: description,
             module: module,
+            loadMode: loadMode,
+            deferredGroup: deferredGroup,
+            deferredComponent: deferredComponent,
           ),
         );
       }
@@ -779,6 +985,15 @@ class _RouteEntry {
   /// 可选模块名，用于分组生成
   final String? module;
 
+  /// 页面加载模式：eager / deferred
+  final String loadMode;
+
+  /// deferred 分组名（可选）
+  final String? deferredGroup;
+
+  /// 可选 deferred component 名称（用于注释和映射）
+  final String? deferredComponent;
+
   _RouteEntry({
     required this.path,
     required this.className,
@@ -791,6 +1006,9 @@ class _RouteEntry {
     List<String?>? paramTypeImportUris,
     this.description,
     this.module,
+    this.loadMode = 'eager',
+    this.deferredGroup,
+    this.deferredComponent,
   }) : paramKeys = paramKeys ?? [],
        paramDefaults = paramDefaults ?? [],
        paramTypes = paramTypes ?? [],
@@ -799,4 +1017,8 @@ class _RouteEntry {
 
   /// FluroRouter 路径参数（如 /home/:id）或查询参数（如 /home?id=1）时需将 parameters 传给页面
   bool get hasPathOrQueryParams => path.contains(':') || path.contains('?');
+
+  bool get isDeferred => loadMode == 'deferred';
+
+  String get deferredPrefix => _deferredPrefixFor(this);
 }

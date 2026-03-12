@@ -79,7 +79,7 @@ class _HomePageState extends State<HomePage> {
                   '/search?keyword=test&page=1',
                   context: context,
                 ),
-                child: const Text('去搜索页(查询参数)'),
+                child: const Text('去搜索页(查询参数, deferred)'),
               ),
               FilledButton(
                 onPressed: () => FluroConfig.push(
