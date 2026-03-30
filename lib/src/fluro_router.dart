@@ -74,6 +74,7 @@ class FluroRouter with FluroRouterTools {
         transitionBuilder: pending.transitionBuilder,
         routeSettings: pending.routeSettings,
         opaque: pending.opaque,
+        disableSwipeBack: pending.disableSwipeBack,
       );
       pending.complete(result);
       return result;
@@ -116,6 +117,7 @@ class FluroRouter with FluroRouterTools {
     Curve transitionCurve = FluroRouterTools.defaultTransitionCurve,
     RouteTransitionsBuilder? transitionBuilder,
     bool? opaque,
+    bool disableSwipeBack = false,
   }) {
     final routeData = FluroRouteData(
       routePath,
@@ -125,6 +127,7 @@ class FluroRouter with FluroRouterTools {
       transitionCurve: transitionCurve,
       transitionBuilder: transitionBuilder,
       opaque: opaque,
+      disableSwipeBack: disableSwipeBack,
     );
     _routeTree.addRoute(routeData);
   }
@@ -167,6 +170,7 @@ class FluroRouter with FluroRouterTools {
     RouteTransitionsBuilder? transitionBuilder,
     RouteSettings? routeSettings,
     bool? opaque,
+    bool disableSwipeBack = false,
   }) async {
     return _navigateToInternal<T>(
       context,
@@ -182,6 +186,7 @@ class FluroRouter with FluroRouterTools {
       transitionBuilder: transitionBuilder,
       routeSettings: routeSettings,
       opaque: opaque,
+      disableSwipeBack: disableSwipeBack,
     );
   }
 
@@ -199,6 +204,7 @@ class FluroRouter with FluroRouterTools {
     RouteTransitionsBuilder? transitionBuilder,
     RouteSettings? routeSettings,
     bool? opaque,
+    bool disableSwipeBack = false,
   }) async {
     /// 根据给定的路径匹配路由。如果没有匹配到路由，RouteMatchType.noMatch 表示未找到匹配的路由。
     FluroRouteMatch routeMatch = matchRoute(
@@ -243,6 +249,7 @@ class FluroRouter with FluroRouterTools {
             transitionBuilder: transitionBuilder,
             routeSettings: routeSettings,
             opaque: opaque,
+            disableSwipeBack: disableSwipeBack,
           );
         }
         if (result is GuardCancel) {
@@ -261,6 +268,7 @@ class FluroRouter with FluroRouterTools {
             transitionBuilder: transitionBuilder,
             routeSettings: routeSettings,
             opaque: opaque,
+            disableSwipeBack: disableSwipeBack,
           );
           // `pending.future` 是 `Future<Object?>`，不能直接强转为 `Future<T?>`（会在运行时崩溃）。
           // 用 then 包一层把值转成 `T?`，以保证 `FluroConfig.push<T>` 的返回类型正确。
@@ -354,6 +362,7 @@ class FluroRouter with FluroRouterTools {
     RouteTransitionsBuilder? transitionsBuilder,
     bool maintainState = true,
     bool? opaque,
+    bool disableSwipeBack = false,
   }) {
     RouteSettings settings = settingsHandle(routeSettings, path);
 
@@ -390,6 +399,8 @@ class FluroRouter with FluroRouterTools {
         transitionType ?? routeData?.transitionType ?? TransitionType.native;
     Duration? duration = transitionDuration ?? routeData?.transitionDuration;
     Curve? curve = transitionCurve ?? routeData?.transitionCurve;
+    final effectiveDisableSwipeBack =
+        disableSwipeBack || (routeData?.disableSwipeBack ?? false);
 
     // 返回匹配结果，并包含构造好的路由对象。
     final nativeRoute = creatNativeRoute(
@@ -404,6 +415,7 @@ class FluroRouter with FluroRouterTools {
         transitionsBuilder: transitionsBuilder,
         route: routeData,
         opaque: opaque,
+        disableSwipeBack: effectiveDisableSwipeBack,
       ),
     );
     return FluroRouteMatch(

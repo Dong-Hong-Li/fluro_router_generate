@@ -12,6 +12,7 @@ class FluroRouteData {
     this.transitionCurve,
     this.transitionBuilder,
     this.opaque,
+    this.disableSwipeBack = false,
   });
 
   /// 路由路径
@@ -32,6 +33,9 @@ class FluroRouteData {
 
   /// 是否透明
   bool? opaque;
+
+  /// 是否禁用侧滑返回包装
+  bool disableSwipeBack;
 }
 
 /// `RouteTreeNode` 表示路由树中的某一个节点 (路由片段)
@@ -89,6 +93,9 @@ class RouteConfiguration {
   /// 是否不透明
   final bool? opaque;
 
+  /// 是否禁用侧滑返回包装（SwipeBackWrapper）
+  final bool disableSwipeBack;
+
   RouteConfiguration({
     this.routeSettings,
     required this.parameters,
@@ -100,5 +107,6 @@ class RouteConfiguration {
     this.transitionsBuilder,
     this.route,
     this.opaque,
+    this.disableSwipeBack = false,
   });
 }

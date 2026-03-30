@@ -2,6 +2,20 @@
 
 ---
 
+## 1.4.0
+
+**English**
+
+- **Disable swipe-back wrapper**: New `disableSwipeBack` (default `false`) on `FluroRouter.define`, `navigateTo`, `FluroConfig.push`, and `matchRoute`. When `true`, preset transitions (`inFromLeft` / `fadeIn` / `none`, etc.) no longer wrap with `SwipeBackWrapper`. Route-level and per-push flags are OR’d; guard suspend/resume preserves the flag via `PendingNavigation`.
+- **Deferred route UX**: `DeferredRoutePage` supports optional `wrapper` for custom `FutureBuilder`/animations; `DeferredRouteUIOptions` and `FluroConfig.deferredWrapperFor(path)` for global/per-path wiring; `registerDeferredLoader` / `preloadDeferredRoute` / `preloadAllDeferredRoutes` for preloading large deferred modules.
+
+**中文**
+
+- **禁用侧滑返回包装**：新增 `disableSwipeBack`（默认 `false`），可在 `FluroRouter.define`、`navigateTo`、`FluroConfig.push`、`matchRoute` 使用。为 `true` 时，`inFromLeft` / `fadeIn` / `none` 等预设转场不再包 `SwipeBackWrapper`。路由定义与单次跳转任一为 `true` 即禁用；守卫挂起/恢复通过 `PendingNavigation` 保留该参数。
+- **Deferred 路由体验**：`DeferredRoutePage` 支持可选 `wrapper` 自定义 FutureBuilder/动画；`DeferredRouteUIOptions` 与 `FluroConfig.deferredWrapperFor(path)` 做全局/按路径配置；`registerDeferredLoader`、`preloadDeferredRoute`、`preloadAllDeferredRoutes` 用于大模块预加载。
+
+---
+
 ## 1.3.1
 
 **English**

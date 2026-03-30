@@ -57,6 +57,7 @@ class PendingNavigation {
     this.transitionBuilder,
     this.routeSettings,
     this.opaque,
+    this.disableSwipeBack = false,
     required Completer<Object?> completer,
   }) : _completer = completer;
 
@@ -71,6 +72,7 @@ class PendingNavigation {
   final RouteTransitionsBuilder? transitionBuilder;
   final RouteSettings? routeSettings;
   final bool? opaque;
+  final bool disableSwipeBack;
 
   final Completer<Object?> _completer;
 
@@ -109,6 +111,7 @@ class GuardSuspend extends GuardResult {
     RouteTransitionsBuilder? transitionBuilder,
     RouteSettings? routeSettings,
     bool? opaque,
+    bool disableSwipeBack = false,
   }) {
     final old = _pending;
     if (old != null) {
@@ -128,6 +131,7 @@ class GuardSuspend extends GuardResult {
       transitionBuilder: transitionBuilder,
       routeSettings: routeSettings,
       opaque: opaque,
+      disableSwipeBack: disableSwipeBack,
       completer: completer,
     );
     return _pending!;

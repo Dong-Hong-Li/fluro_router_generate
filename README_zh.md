@@ -37,7 +37,7 @@
 
 ```yaml
 dependencies:
-  fluro_router_generate: ^1.3.1  # 或 path: ../ 本地开发
+  fluro_router_generate: ^1.4.0  # 或 path: ../ 本地开发
 dev_dependencies:
   build_runner: ^2.10.5
 ```

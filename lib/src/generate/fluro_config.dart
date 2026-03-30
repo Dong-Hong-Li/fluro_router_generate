@@ -48,7 +48,10 @@ abstract class FluroConfig {
   /// 大模块（如直播、音视频剪辑）可在首页就绪或进入发现页时预加载，减少首次进入该路由时的等待。
   /// 需与生成代码中的 path 一致；loader 通常为对应 deferred 库的 loadLibrary，例如：
   /// `FluroConfig.registerDeferredLoader('/search?keyword=&page=1', () => search_lib.loadLibrary());`
-  static void registerDeferredLoader(String path, Future<void> Function() loader) {
+  static void registerDeferredLoader(
+    String path,
+    Future<void> Function() loader,
+  ) {
     _deferredLoaders[path] = loader;
   }
 
@@ -109,6 +112,7 @@ abstract class FluroConfig {
   /// - `transitionBuilder`：自定义过渡效果的构建器
   /// - `routeSettings`：路由设置a
   /// - `opaque`：是否透明
+  /// - `disableSwipeBack`：是否禁用 SwipeBackWrapper 侧滑返回（默认 false）
   ///
   /// ```dart
   /// push(
@@ -133,6 +137,7 @@ abstract class FluroConfig {
     RouteTransitionsBuilder? transitionBuilder,
     RouteSettings? routeSettings,
     bool? opaque,
+    bool disableSwipeBack = false,
   }) async {
     if (context == null && _context == null) {
       throw Exception('context is not set, please set context in FiuroConfig');
@@ -150,6 +155,7 @@ abstract class FluroConfig {
       transitionBuilder: transitionBuilder,
       routeSettings: routeSettings,
       opaque: opaque,
+      disableSwipeBack: disableSwipeBack,
     );
   }
 }

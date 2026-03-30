@@ -49,6 +49,7 @@ mixin FluroRouterTools {
     RouteStrategy strategy = RouteStrategyFactory.getStrategy(
       routeConfig.transition,
       curve: routeConfig.transitionCurve,
+      disableSwipeBack: routeConfig.disableSwipeBack,
     );
     return strategy.createRoute(routeConfig);
   }

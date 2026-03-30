@@ -20,7 +20,11 @@ class RouteStrategyFactory {
   ///
   /// - [transition] 过渡类型
   /// - [curve] 动画曲线（可选，默认使用 easeInOut）
-  static RouteStrategy getStrategy(TransitionType? transition, {Curve? curve}) {
+  static RouteStrategy getStrategy(
+    TransitionType? transition, {
+    Curve? curve,
+    bool disableSwipeBack = false,
+  }) {
     // 如果是静态策略类型，直接返回
     if (_staticStrategies.containsKey(transition)) {
       return _staticStrategies[transition]!;
@@ -32,32 +36,50 @@ class RouteStrategyFactory {
     switch (transition) {
       case TransitionType.inFromLeft:
         return SimpleTransitionStrategy(
-          TransitionEffect.inFromLeftTransitionWithCurve(effectiveCurve),
+          TransitionEffect.inFromLeftTransitionWithCurve(
+            effectiveCurve,
+            disableSwipeBack: disableSwipeBack,
+          ),
         );
       case TransitionType.inFromTop:
         return SimpleTransitionStrategy(
-          TransitionEffect.inFromTopTransitionWithCurve(effectiveCurve),
+          TransitionEffect.inFromTopTransitionWithCurve(
+            effectiveCurve,
+            disableSwipeBack: disableSwipeBack,
+          ),
         );
       case TransitionType.inFromRight:
         return SimpleTransitionStrategy(
-          TransitionEffect.inFromRightTransitionWithCurve(effectiveCurve),
+          TransitionEffect.inFromRightTransitionWithCurve(
+            effectiveCurve,
+            disableSwipeBack: disableSwipeBack,
+          ),
         );
       case TransitionType.inFromBottom:
         return SimpleTransitionStrategy(
-          TransitionEffect.inFromBottomTransitionWithCurve(effectiveCurve),
+          TransitionEffect.inFromBottomTransitionWithCurve(
+            effectiveCurve,
+            disableSwipeBack: disableSwipeBack,
+          ),
         );
       case TransitionType.fadeIn:
         return SimpleTransitionStrategy(
-          TransitionEffect.fadeTransitionWithCurve(effectiveCurve),
+          TransitionEffect.fadeTransitionWithCurve(
+            effectiveCurve,
+            disableSwipeBack: disableSwipeBack,
+          ),
         );
       case TransitionType.fadeInAndFromBottom:
         return SimpleTransitionStrategy(
           TransitionEffect.fadeInAndFromBottomTransitionWithCurve(
             effectiveCurve,
+            disableSwipeBack: disableSwipeBack,
           ),
         );
       case TransitionType.none:
-        return SimpleTransitionStrategy(TransitionEffect.noneTransition);
+        return SimpleTransitionStrategy(
+          TransitionEffect.noneTransition(disableSwipeBack: disableSwipeBack),
+        );
       default:
         return CustomRouteStrategy();
     }

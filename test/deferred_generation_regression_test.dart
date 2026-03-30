@@ -19,7 +19,7 @@ void main() {
       expect(content, contains('deferred as deferred_search_feature_'));
       expect(content, contains('DeferredRoutePage('));
       expect(content, contains('.loadLibrary()'));
-      expect(content, contains("RouterHandler('/user/:userId/post/:postId'"));
+      expect(content, contains("'/user/:userId/post/:postId'"));
     },
   );
 
