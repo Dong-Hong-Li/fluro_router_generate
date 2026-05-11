@@ -2,6 +2,20 @@
 
 ---
 
+## 1.4.2
+
+**English**
+
+- **`FluroRouter.pop` / `popToRoot` / `popUntil`**: Align with [`Navigator`] APIs—optional **`rootNavigator`** on all three; **`popUntil`** matches [`Navigator.popUntil`] (removed the unused positional `result` argument that was never forwarded). **`popToRoot`** is equivalent to `popUntil` until `route.isFirst`. **`pop`** uses named **`result`** (call `pop(context, result: value)` instead of a second positional argument).
+- **`FluroConfig`**: **`pop`**, **`popToRoot`**, **`popUntil`** mirror the router methods, using optional **`context`** or configured **`currentContext`** (same rule as **`push`**).
+
+**中文**
+
+- **`FluroRouter.pop` / `popToRoot` / `popUntil`**：与 [`Navigator`] 对齐，三者均支持可选 **`rootNavigator`**；**`popUntil`** 与 [`Navigator.popUntil`] 一致，并移除原先未实际传入 Navigator 的无用 **`result` 位置参数**。**`popToRoot`** 等价于一直 `popUntil` 到 `route.isFirst`。**`pop`** 的返回值改为命名参数 **`result`**（写成 `pop(context, result: value)`，勿再用第二位位置参数）。
+- **`FluroConfig`**：新增 **`pop`**、**`popToRoot`**、**`popUntil`**，与路由器方法对应；**`context`** 可省略时使用已配置的 **`currentContext`**（与 **`push`** 相同）。
+
+---
+
 ## 1.4.1
 
 **English**

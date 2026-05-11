@@ -161,4 +161,39 @@ abstract class FluroConfig {
       disableSwipeBack: disableSwipeBack,
     );
   }
+
+  /// 弹出当前路由，等同于 [FluroRouter.pop]；未传 [context] 时使用 [currentContext]。
+  static void pop<T extends Object?>({
+    T? result,
+    BuildContext? context,
+    bool rootNavigator = false,
+  }) {
+    final ctx = context ?? _context;
+    if (ctx == null) {
+      throw Exception('context is not set, please set context in FluroConfig');
+    }
+    router.pop<T>(ctx, result: result, rootNavigator: rootNavigator);
+  }
+
+  /// 弹出直至根路由，等同于 [FluroRouter.popToRoot]。
+  static void popToRoot({BuildContext? context, bool rootNavigator = false}) {
+    final ctx = context ?? _context;
+    if (ctx == null) {
+      throw Exception('context is not set, please set context in FluroConfig');
+    }
+    router.popToRoot(ctx, rootNavigator: rootNavigator);
+  }
+
+  /// 弹出路由直至满足 [predicate]，等同于 [FluroRouter.popUntil]。
+  static void popUntil(
+    RoutePredicate predicate, {
+    BuildContext? context,
+    bool rootNavigator = false,
+  }) {
+    final ctx = context ?? _context;
+    if (ctx == null) {
+      throw Exception('context is not set, please set context in FluroConfig');
+    }
+    router.popUntil(ctx, predicate, rootNavigator: rootNavigator);
+  }
 }

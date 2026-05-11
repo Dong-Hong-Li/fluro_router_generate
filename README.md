@@ -35,7 +35,7 @@ You stay on [Fluro](https://github.com/lukepighetti/fluro)—same `FluroRouter`,
 
 ```yaml
 dependencies:
-  fluro_router_generate: ^1.4.1  # or path: ../ for local
+  fluro_router_generate: ^1.4.2  # or path: ../ for local
 dev_dependencies:
   build_runner: ^2.10.5
 ```

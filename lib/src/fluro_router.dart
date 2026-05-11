@@ -333,20 +333,36 @@ class FluroRouter with FluroRouterTools {
     return future.then<T?>((v) => v as T?);
   }
 
-  /// 使用 [Navigator.pop]
-  void pop<T>(BuildContext context, [T? result]) =>
-      Navigator.of(context).pop(result);
-
-  /// 使用 [Navigator.popUntil]
-  void popToRoot<T>(BuildContext context, [T? result]) =>
-      popUntil(context, (route) => route.isFirst);
-
-  /// 使用 [Navigator.pop]
-  void popUntil<T>(
-    BuildContext context,
-    RoutePredicate predicate, [
+  /// 等价于 [Navigator.of]（可选 [rootNavigator]）后 [Navigator.pop]。
+  ///
+  /// 返回值请使用命名参数：`pop(context, result: value)`（不再使用第二位位置参数）。
+  void pop<T extends Object?>(
+    BuildContext context, {
     T? result,
-  ]) => Navigator.of(context).popUntil(predicate);
+    bool rootNavigator = false,
+  }) {
+    Navigator.of(context, rootNavigator: rootNavigator).pop<T>(result);
+  }
+
+  /// 连续弹出直至根路由：等价于 `popUntil(context, (route) => route.isFirst)`。
+  ///
+  /// 与 [Navigator.popUntil] 语义一致，不向被保留的页面传递 pop 返回值。
+  void popToRoot(BuildContext context, {bool rootNavigator = false}) {
+    popUntil(
+      context,
+      (Route<dynamic> route) => route.isFirst,
+      rootNavigator: rootNavigator,
+    );
+  }
+
+  /// 等价于 [Navigator.of]（可选 [rootNavigator]）后 [Navigator.popUntil]。
+  void popUntil(
+    BuildContext context,
+    RoutePredicate predicate, {
+    bool rootNavigator = false,
+  }) {
+    Navigator.of(context, rootNavigator: rootNavigator).popUntil(predicate);
+  }
 
   /// `MaterialApp.onGenerateRoute` 允许你在运行时根据传入的 `RouteSettings` 动态生成路由。
   Route<dynamic>? generator(RouteSettings routeSettings) =>
