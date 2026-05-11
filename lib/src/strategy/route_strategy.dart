@@ -183,8 +183,8 @@ class CustomRouteStrategy implements RouteStrategy {
         routeConfig.transition == TransitionType.none
         ? (
             BuildContext _,
-            Animation<double> __,
-            Animation<double> ___,
+            Animation<double> _,
+            Animation<double> _,
             Widget child,
           ) => child
         : routeTransitionsBuilder!;

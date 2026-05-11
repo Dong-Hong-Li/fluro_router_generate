@@ -63,14 +63,14 @@ class MyApp extends StatelessWidget {
       );
       FluroConfig.router.define(
         '/c',
-        handler: FluroHandler(handlerFunc: (_, __) => const CPage()),
+        handler: FluroHandler(handlerFunc: (_, _) => const CPage()),
       );
 
       // disableSwipeBack 示例：路由 define 上关闭侧滑返回（与 SwipeBackWrapper + iOS 系统左缘返回）
       FluroConfig.router.define(
         '/demo/no-swipe-back',
         handler: FluroHandler(
-          handlerFunc: (_, __) => const NoSwipeBackDemoPage(
+          handlerFunc: (_, _) => const NoSwipeBackDemoPage(
             title: '路由级 disableSwipeBack',
             hint:
                 '本页通过 router.define(..., disableSwipeBack: true) 注册，'
@@ -84,7 +84,7 @@ class MyApp extends StatelessWidget {
       FluroConfig.router.define(
         '/demo/swipe-push-override',
         handler: FluroHandler(
-          handlerFunc: (_, __) => const NoSwipeBackDemoPage(
+          handlerFunc: (_, _) => const NoSwipeBackDemoPage(
             title: 'push 级 disableSwipeBack',
             hint:
                 '路由未设置 disableSwipeBack；通过 '

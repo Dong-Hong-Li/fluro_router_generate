@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 FluroHandler _dummyHandler() =>
-    FluroHandler(handlerFunc: (_, __) => const Scaffold(body: SizedBox()));
+    FluroHandler(handlerFunc: (_, _) => const Scaffold(body: SizedBox()));
 
 void main() {
   group('disableSwipeBack and popGestureEnabled', () {
@@ -146,8 +146,7 @@ void main() {
         router.define(
           '/nav-swipe',
           handler: FluroHandler(
-            handlerFunc: (_, __) =>
-                const Scaffold(body: Text('nav-swipe-body')),
+            handlerFunc: (_, _) => const Scaffold(body: Text('nav-swipe-body')),
           ),
           transitionType: TransitionType.inFromLeft,
         );
@@ -183,7 +182,7 @@ void main() {
         FluroConfig.router.define(
           '/_ut_fluro_cfg_sw_true',
           handler: FluroHandler(
-            handlerFunc: (_, __) =>
+            handlerFunc: (_, _) =>
                 const Scaffold(body: Text('body-fluro-cfg-true')),
           ),
           transitionType: TransitionType.inFromLeft,
@@ -220,7 +219,7 @@ void main() {
         FluroConfig.router.define(
           '/_ut_fluro_cfg_sw_false',
           handler: FluroHandler(
-            handlerFunc: (_, __) =>
+            handlerFunc: (_, _) =>
                 const Scaffold(body: Text('body-fluro-cfg-false')),
           ),
           transitionType: TransitionType.inFromLeft,

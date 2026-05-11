@@ -33,7 +33,7 @@ void main() {
         home: DeferredRoutePage(
           loader: () => Future<void>.error(StateError('load failed')),
           builder: (_) => const SizedBox.shrink(),
-          errorBuilder: (_, error, __) => Text(error.toString()),
+          errorBuilder: (_, error, _) => Text(error.toString()),
         ),
       ),
     );
