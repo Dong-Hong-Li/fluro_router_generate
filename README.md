@@ -3,7 +3,6 @@
 ---
 
 [![pub package](https://img.shields.io/pub/v/fluro_router_generate.svg)](https://pub.dev/packages/fluro_router_generate)
-[![Dart CI](https://github.com/Dong-Hong-Li/fluro_router_generate/actions/workflows/release.yml/badge.svg)](https://github.com/Dong-Hong-Li/fluro_router_generate/actions/workflows/release.yml)
 [![License](https://img.shields.io/badge/license-Artistic%202.0-blue.svg)](https://github.com/Dong-Hong-Li/fluro_router_generate/blob/main/LICENSE)
 
 # fluro_router_generate
@@ -36,7 +35,7 @@ You stay on [Fluro](https://github.com/lukepighetti/fluro)—same `FluroRouter`,
 
 ```yaml
 dependencies:
-  fluro_router_generate: ^1.4.0  # or path: ../ for local
+  fluro_router_generate: ^1.4.1  # or path: ../ for local
 dev_dependencies:
   build_runner: ^2.10.5
 ```

@@ -2,6 +2,7 @@ import 'package:example/router/route_guards.dart';
 import 'package:example/router/router_config.dart';
 import 'package:example/pages/auth_page.dart';
 import 'package:example/pages/c_page.dart';
+import 'package:example/pages/no_swipe_back_demo_page.dart';
 import 'package:fluro_router_generate/fluro_router.dart';
 import 'package:flutter/material.dart';
 
@@ -63,6 +64,34 @@ class MyApp extends StatelessWidget {
       FluroConfig.router.define(
         '/c',
         handler: FluroHandler(handlerFunc: (_, __) => const CPage()),
+      );
+
+      // disableSwipeBack 示例：路由 define 上关闭侧滑返回（与 SwipeBackWrapper + iOS 系统左缘返回）
+      FluroConfig.router.define(
+        '/demo/no-swipe-back',
+        handler: FluroHandler(
+          handlerFunc: (_, __) => const NoSwipeBackDemoPage(
+            title: '路由级 disableSwipeBack',
+            hint:
+                '本页通过 router.define(..., disableSwipeBack: true) 注册，'
+                '转场为 inFromLeft。',
+          ),
+        ),
+        transitionType: TransitionType.inFromLeft,
+        disableSwipeBack: true,
+      );
+      // 路由本身不禁用；由 push 时传入 disableSwipeBack（需库内 matchRoute 传入该参数）
+      FluroConfig.router.define(
+        '/demo/swipe-push-override',
+        handler: FluroHandler(
+          handlerFunc: (_, __) => const NoSwipeBackDemoPage(
+            title: 'push 级 disableSwipeBack',
+            hint:
+                '路由未设置 disableSwipeBack；通过 '
+                'FluroConfig.push(..., disableSwipeBack: true) 单次跳转关闭侧滑返回。',
+          ),
+        ),
+        transitionType: TransitionType.inFromLeft,
       );
     }
 

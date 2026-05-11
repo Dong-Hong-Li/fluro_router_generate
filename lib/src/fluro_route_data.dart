@@ -34,7 +34,8 @@ class FluroRouteData {
   /// 是否透明
   bool? opaque;
 
-  /// 是否禁用侧滑返回包装
+  /// 是否禁用侧滑返回：不包 [SwipeBackWrapper]，并关闭 [ModalRoute.popGestureEnabled]
+  /// （含 iOS 上 Material/Cupertino 默认路由的左缘返回手势）。
   bool disableSwipeBack;
 }
 

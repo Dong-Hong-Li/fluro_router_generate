@@ -2,6 +2,24 @@
 
 ---
 
+## 1.4.1
+
+**English**
+
+- **FluroConfig.push**: Forwards `disableSwipeBack` to `FluroRouter.navigateTo` (previously omitted, so the flag had no effect when using generated push).
+- **disableSwipeBack**: When `true`, uses routes that set `popGestureEnabled` to `false` so iOS edge swipe-back on `MaterialPageRoute` / `CupertinoPageRoute` / custom `PageRouteBuilder` is disabled alongside `SwipeBackWrapper`.
+- **Preset transitions (`inFromRight`, etc.)**: `SimpleTransitionStrategy` defaults `PageRouteBuilder.opaque` to `false` (was incorrectly opaque in debug builds), so slide transitions can show the underlying route as intended.
+- **Docs / DX**: Clarified `disableSwipeBack` on `FluroRouteData` and `FluroConfig.push`; fixed typo in the missing-context exception (`FiuroConfig` → `FluroConfig`).
+
+**中文**
+
+- **FluroConfig.push**：将 `disableSwipeBack` 透传给 `FluroRouter.navigateTo`（此前未传递，生成式 push 时该开关不生效）。
+- **disableSwipeBack**：为 `true` 时使用 `popGestureEnabled == false` 的路由子类，在关闭 `SwipeBackWrapper` 的同时禁用 iOS 上 Material/Cupertino/自定义 `PageRouteBuilder` 的左缘返回手势。
+- **预设转场（如 `inFromRight`）**：`SimpleTransitionStrategy` 默认 `PageRouteBuilder.opaque` 为 `false`（此前在 debug 下错误地为不透明），侧滑/转场时可露出下层页面。
+- **文档与体验**：补充 `FluroRouteData`、`FluroConfig.push` 上 `disableSwipeBack` 说明；修正未设置 context 时异常文案拼写（`FiuroConfig` → `FluroConfig`）。
+
+---
+
 ## 1.4.0
 
 **English**

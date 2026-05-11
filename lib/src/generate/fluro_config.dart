@@ -112,7 +112,8 @@ abstract class FluroConfig {
   /// - `transitionBuilder`：自定义过渡效果的构建器
   /// - `routeSettings`：路由设置a
   /// - `opaque`：是否透明
-  /// - `disableSwipeBack`：是否禁用 SwipeBackWrapper 侧滑返回（默认 false）
+  /// - `disableSwipeBack`：是否禁用侧滑返回（`SwipeBackWrapper` + 系统 [PageRoute.popGestureEnabled]，
+  ///   与 [FluroRouter.navigateTo] / [FluroRouter.matchRoute] 一致；默认 false）
   ///
   /// ```dart
   /// push(
@@ -140,8 +141,10 @@ abstract class FluroConfig {
     bool disableSwipeBack = false,
   }) async {
     if (context == null && _context == null) {
-      throw Exception('context is not set, please set context in FiuroConfig');
+      throw Exception('context is not set, please set context in FluroConfig');
     }
+    // 必须与 [FluroRouter.navigateTo] 形参一一对应透传，禁止写死 transition / disableSwipeBack，
+    // 否则调用方传入的过渡与侧滑开关会全部失效。
     return await router.navigateTo(
       context ?? _context!,
       path,

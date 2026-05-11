@@ -190,6 +190,7 @@ class FluroRouter with FluroRouterTools {
     );
   }
 
+  /// 内部导航方法，用于处理导航逻辑。
   Future<T?> _navigateToInternal<T extends Object?>(
     BuildContext context,
     String path, {
@@ -217,6 +218,7 @@ class FluroRouter with FluroRouterTools {
       maintainState: maintainState,
       routeSettings: routeSettings,
       opaque: opaque,
+      disableSwipeBack: disableSwipeBack,
     );
 
     // 在真正执行 Navigator.push 之前执行守卫（跳转前拦截/重定向）
@@ -334,6 +336,17 @@ class FluroRouter with FluroRouterTools {
   /// 使用 [Navigator.pop]
   void pop<T>(BuildContext context, [T? result]) =>
       Navigator.of(context).pop(result);
+
+  /// 使用 [Navigator.popUntil]
+  void popToRoot<T>(BuildContext context, [T? result]) =>
+      popUntil(context, (route) => route.isFirst);
+
+  /// 使用 [Navigator.pop]
+  void popUntil<T>(
+    BuildContext context,
+    RoutePredicate predicate, [
+    T? result,
+  ]) => Navigator.of(context).popUntil(predicate);
 
   /// `MaterialApp.onGenerateRoute` 允许你在运行时根据传入的 `RouteSettings` 动态生成路由。
   Route<dynamic>? generator(RouteSettings routeSettings) =>

@@ -4,6 +4,63 @@ import 'package:fluro_router_generate/src/enum.dart';
 import 'package:fluro_router_generate/src/fluro_route_data.dart';
 import 'package:fluro_router_generate/src/mixin_fluro_router_tools.dart';
 
+/// [disableSwipeBack] 为 true 时，除不包 [SwipeBackWrapper] 外，关闭
+/// [ModalRoute.popGestureEnabled]，以禁用 iOS 上 [MaterialPageRoute] /
+/// [CupertinoPageRoute] 自带的左缘返回（与 [SwipeBackWrapper] 不是同一套手势）。
+class _NoPopGestureMaterialPageRoute<T> extends MaterialPageRoute<T> {
+  _NoPopGestureMaterialPageRoute({
+    required super.builder,
+    super.settings,
+    super.requestFocus,
+    super.maintainState,
+    super.fullscreenDialog,
+    super.allowSnapshotting,
+    super.barrierDismissible,
+    super.traversalEdgeBehavior,
+    super.directionalTraversalEdgeBehavior,
+  });
+
+  @override
+  bool get popGestureEnabled => false;
+}
+
+class _NoPopGestureCupertinoPageRoute<T> extends CupertinoPageRoute<T> {
+  _NoPopGestureCupertinoPageRoute({
+    required super.builder,
+    super.title,
+    super.settings,
+    super.requestFocus,
+    super.maintainState,
+    super.fullscreenDialog,
+    super.allowSnapshotting,
+    super.barrierDismissible,
+  });
+
+  @override
+  bool get popGestureEnabled => false;
+}
+
+class _NoPopGesturePageRouteBuilder<T> extends PageRouteBuilder<T> {
+  _NoPopGesturePageRouteBuilder({
+    super.settings,
+    super.requestFocus,
+    required super.pageBuilder,
+    super.transitionsBuilder,
+    super.transitionDuration,
+    super.reverseTransitionDuration,
+    super.opaque,
+    super.barrierDismissible,
+    super.barrierColor,
+    super.barrierLabel,
+    super.maintainState,
+    super.fullscreenDialog,
+    super.allowSnapshotting,
+  });
+
+  @override
+  bool get popGestureEnabled => false;
+}
+
 /// 处理路由导航的路由策略
 abstract class RouteStrategy {
   PageRoute<dynamic> createRoute(RouteConfiguration routeConfig);
@@ -14,17 +71,26 @@ abstract class RouteStrategy {
 class NativeRouteStrategy implements RouteStrategy {
   @override
   PageRoute<dynamic> createRoute(RouteConfiguration routeConfig) {
+    final builder = (BuildContext context) {
+      return routeConfig.handler.handlerFunc(
+            context,
+            routeConfig.parameters,
+          ) ??
+          const SizedBox.shrink();
+    };
+    if (routeConfig.disableSwipeBack) {
+      return _NoPopGestureMaterialPageRoute<dynamic>(
+        settings: routeConfig.routeSettings,
+        fullscreenDialog: routeConfig.transition == TransitionType.nativeModal,
+        maintainState: routeConfig.maintainState,
+        builder: builder,
+      );
+    }
     return MaterialPageRoute<dynamic>(
       settings: routeConfig.routeSettings,
       fullscreenDialog: routeConfig.transition == TransitionType.nativeModal,
       maintainState: routeConfig.maintainState,
-      builder: (BuildContext context) {
-        return routeConfig.handler.handlerFunc(
-              context,
-              routeConfig.parameters,
-            ) ??
-            const SizedBox.shrink();
-      },
+      builder: builder,
     );
   }
 }
@@ -33,18 +99,28 @@ class NativeRouteStrategy implements RouteStrategy {
 class MaterialRouteStrategy implements RouteStrategy {
   @override
   PageRoute<dynamic> createRoute(RouteConfiguration routeConfig) {
+    final builder = (BuildContext context) {
+      return routeConfig.handler.handlerFunc(
+            context,
+            routeConfig.parameters,
+          ) ??
+          const SizedBox.shrink();
+    };
+    if (routeConfig.disableSwipeBack) {
+      return _NoPopGestureMaterialPageRoute<dynamic>(
+        settings: routeConfig.routeSettings,
+        fullscreenDialog:
+            routeConfig.transition == TransitionType.materialFullScreenDialog,
+        maintainState: routeConfig.maintainState,
+        builder: builder,
+      );
+    }
     return MaterialPageRoute<dynamic>(
       settings: routeConfig.routeSettings,
       fullscreenDialog:
           routeConfig.transition == TransitionType.materialFullScreenDialog,
       maintainState: routeConfig.maintainState,
-      builder: (BuildContext context) {
-        return routeConfig.handler.handlerFunc(
-              context,
-              routeConfig.parameters,
-            ) ??
-            const SizedBox.shrink();
-      },
+      builder: builder,
     );
   }
 }
@@ -53,18 +129,28 @@ class MaterialRouteStrategy implements RouteStrategy {
 class CupertinoRouteStrategy implements RouteStrategy {
   @override
   PageRoute<dynamic> createRoute(RouteConfiguration routeConfig) {
-    return CupertinoPageRoute(
+    final builder = (BuildContext context) {
+      return routeConfig.handler.handlerFunc(
+            context,
+            routeConfig.parameters,
+          ) ??
+          const SizedBox.shrink();
+    };
+    if (routeConfig.disableSwipeBack) {
+      return _NoPopGestureCupertinoPageRoute<dynamic>(
+        settings: routeConfig.routeSettings,
+        fullscreenDialog:
+            routeConfig.transition == TransitionType.cupertinoFullScreenDialog,
+        maintainState: routeConfig.maintainState,
+        builder: builder,
+      );
+    }
+    return CupertinoPageRoute<dynamic>(
       settings: routeConfig.routeSettings,
       fullscreenDialog:
           routeConfig.transition == TransitionType.cupertinoFullScreenDialog,
       maintainState: routeConfig.maintainState,
-      builder: (BuildContext context) {
-        return routeConfig.handler.handlerFunc(
-              context,
-              routeConfig.parameters,
-            ) ??
-            const SizedBox.shrink();
-      },
+      builder: builder,
     );
   }
 }
@@ -78,41 +164,56 @@ class CustomRouteStrategy implements RouteStrategy {
     routeTransitionsBuilder =
         routeConfig.transitionsBuilder ?? routeConfig.route?.transitionBuilder;
 
+    final RoutePageBuilder pageBuilder =
+        (
+          BuildContext context,
+          Animation<double> animation,
+          Animation<double> secondaryAnimation,
+        ) {
+          return routeConfig.handler.handlerFunc(
+                context,
+                routeConfig.parameters,
+              ) ??
+              const SizedBox.shrink();
+        };
+
+    final td = routeConfig.transition == TransitionType.none
+        ? Duration.zero
+        : (routeConfig.transitionDuration ??
+              routeConfig.route?.transitionDuration ??
+              FluroRouterTools.defaultTransitionDuration);
+
+    final rt = routeConfig.transition == TransitionType.none
+        ? Duration.zero
+        : (routeConfig.transitionDuration ??
+              routeConfig.route?.transitionDuration ??
+              FluroRouterTools.defaultTransitionDuration);
+
+    final RouteTransitionsBuilder tb =
+        routeConfig.transition == TransitionType.none
+        ? (BuildContext _, Animation<double> __, Animation<double> ___, Widget child) =>
+              child
+        : routeTransitionsBuilder!;
+
+    if (routeConfig.disableSwipeBack) {
+      return _NoPopGesturePageRouteBuilder<dynamic>(
+        opaque: false,
+        settings: routeConfig.routeSettings,
+        maintainState: routeConfig.maintainState,
+        pageBuilder: pageBuilder,
+        transitionDuration: td,
+        reverseTransitionDuration: rt,
+        transitionsBuilder: tb,
+      );
+    }
     return PageRouteBuilder<dynamic>(
       opaque: false,
       settings: routeConfig.routeSettings,
       maintainState: routeConfig.maintainState,
-      pageBuilder:
-          (
-            BuildContext context,
-            Animation<double> animation,
-            Animation<double> secondaryAnimation,
-          ) {
-            return routeConfig.handler.handlerFunc(
-                  context,
-                  routeConfig.parameters,
-                ) ??
-                const SizedBox.shrink();
-          },
-
-      ///指定页面过渡动画的持续时间
-      transitionDuration: routeConfig.transition == TransitionType.none
-          ? Duration.zero
-          : (routeConfig.transitionDuration ??
-                routeConfig.route?.transitionDuration ??
-                FluroRouterTools.defaultTransitionDuration),
-
-      /// 指定页面反向过渡动画的持续时间
-      reverseTransitionDuration: routeConfig.transition == TransitionType.none
-          ? Duration.zero
-          : (routeConfig.transitionDuration ??
-                routeConfig.route?.transitionDuration ??
-                FluroRouterTools.defaultTransitionDuration),
-
-      /// 构建过渡动画
-      transitionsBuilder: routeConfig.transition == TransitionType.none
-          ? (_, __, ___, child) => child
-          : routeTransitionsBuilder!,
+      pageBuilder: pageBuilder,
+      transitionDuration: td,
+      reverseTransitionDuration: rt,
+      transitionsBuilder: tb,
     );
   }
 }
@@ -129,30 +230,42 @@ class SimpleTransitionStrategy implements RouteStrategy {
 
   @override
   PageRoute<dynamic> createRoute(RouteConfiguration routeConfig) {
+    final RoutePageBuilder pageBuilder =
+        (
+          BuildContext context,
+          Animation<double> animation,
+          Animation<double> secondaryAnimation,
+        ) {
+          return routeConfig.handler.handlerFunc(
+                context,
+                routeConfig.parameters,
+              ) ??
+              const SizedBox.shrink();
+        };
+
+    final td =
+        routeConfig.transitionDuration ??
+        routeConfig.route?.transitionDuration ??
+        FluroRouterTools.defaultTransitionDuration;
+
+    if (routeConfig.disableSwipeBack) {
+      return _NoPopGesturePageRouteBuilder<dynamic>(
+        opaque: routeConfig.opaque ?? routeConfig.route?.opaque ?? false,
+        settings: routeConfig.routeSettings,
+        maintainState: routeConfig.maintainState,
+        pageBuilder: pageBuilder,
+        transitionDuration: td,
+        reverseTransitionDuration: td,
+        transitionsBuilder: transitionsBuilder,
+      );
+    }
     return PageRouteBuilder<dynamic>(
       opaque: routeConfig.opaque ?? routeConfig.route?.opaque ?? false,
       settings: routeConfig.routeSettings,
       maintainState: routeConfig.maintainState,
-      pageBuilder:
-          (
-            BuildContext context,
-            Animation<double> animation,
-            Animation<double> secondaryAnimation,
-          ) {
-            return routeConfig.handler.handlerFunc(
-                  context,
-                  routeConfig.parameters,
-                ) ??
-                const SizedBox.shrink();
-          },
-      transitionDuration:
-          routeConfig.transitionDuration ??
-          routeConfig.route?.transitionDuration ??
-          FluroRouterTools.defaultTransitionDuration,
-      reverseTransitionDuration:
-          routeConfig.transitionDuration ??
-          routeConfig.route?.transitionDuration ??
-          FluroRouterTools.defaultTransitionDuration,
+      pageBuilder: pageBuilder,
+      transitionDuration: td,
+      reverseTransitionDuration: td,
       transitionsBuilder: transitionsBuilder,
     );
   }

@@ -83,6 +83,23 @@ class _HomePageState extends State<HomePage> {
               ),
               FilledButton(
                 onPressed: () => FluroConfig.push(
+                  '/demo/no-swipe-back',
+                  context: context,
+                  transition: TransitionType.inFromLeft,
+                ),
+                child: const Text('演示：路由 define 禁用侧滑返回'),
+              ),
+              FilledButton(
+                onPressed: () => FluroConfig.push(
+                  '/demo/swipe-push-override',
+                  context: context,
+                  transition: TransitionType.inFromLeft,
+                  disableSwipeBack: true,
+                ),
+                child: const Text('演示：push 时 disableSwipeBack'),
+              ),
+              FilledButton(
+                onPressed: () => FluroConfig.push(
                   '/pass-args',
                   context: context,
                   routeSettings: RouteSettings(
@@ -96,6 +113,8 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () => FluroConfig.push(
                   '/pass-args-no-defaults',
                   context: context,
+                  // disableSwipeBack: true,
+                  transition: TransitionType.inFromRight,
                   routeSettings: RouteSettings(
                     name: '/pass-args-no-defaults',
                     arguments: {'message': '你好', 'flag': 'true'},
