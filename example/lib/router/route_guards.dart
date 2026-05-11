@@ -77,6 +77,7 @@ Future<GuardResult> authGuard2(RouteGuardContext ctx) async {
           guard2Passed = true;
           if (!context.mounted) return;
           await Future.delayed(const Duration(seconds: 1));
+          // ignore: use_build_context_synchronously
           await FluroConfig.resumePendingRoute<bool>(context);
         } else {
           FluroConfig.clearPendingRoute();

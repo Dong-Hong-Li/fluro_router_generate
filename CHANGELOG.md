@@ -8,11 +8,15 @@
 
 - **`FluroRouter.pop` / `popToRoot` / `popUntil`**: Align with [`Navigator`] APIs—optional **`rootNavigator`** on all three; **`popUntil`** matches [`Navigator.popUntil`] (removed the unused positional `result` argument that was never forwarded). **`popToRoot`** is equivalent to `popUntil` until `route.isFirst`. **`pop`** uses named **`result`** (call `pop(context, result: value)` instead of a second positional argument).
 - **`FluroConfig`**: **`pop`**, **`popToRoot`**, **`popUntil`** mirror the router methods, using optional **`context`** or configured **`currentContext`** (same rule as **`push`**).
+- **CI**: Pre-generate `example` router code (`flutter pub get` + `dart run build_runner build --delete-conflicting-outputs` inside `example/`) before `flutter test`, so `deferred_generation_regression_test.dart` can read the `*.router.g.dart` files that are excluded by `.gitignore`. `test` and `publish` jobs are aligned; trigger `paths` now also include `example/**` and `.github/workflows/**`.
+- **Static analysis**: `dart analyze --fatal-warnings --fatal-infos` is clean. Closures that bound a function to a name now use a function declaration (`route_strategy.dart`: `NativeRouteStrategy` / `MaterialRouteStrategy` / `CupertinoRouteStrategy` / `CustomRouteStrategy` / `SimpleTransitionStrategy`), `fluro_router_gen.dart` adds braces to a single-statement `if`, and the `example` `authGuard2` post-`await` `context` use is annotated like `authGuard1`.
 
 **中文**
 
 - **`FluroRouter.pop` / `popToRoot` / `popUntil`**：与 [`Navigator`] 对齐，三者均支持可选 **`rootNavigator`**；**`popUntil`** 与 [`Navigator.popUntil`] 一致，并移除原先未实际传入 Navigator 的无用 **`result` 位置参数**。**`popToRoot`** 等价于一直 `popUntil` 到 `route.isFirst`。**`pop`** 的返回值改为命名参数 **`result`**（写成 `pop(context, result: value)`，勿再用第二位位置参数）。
 - **`FluroConfig`**：新增 **`pop`**、**`popToRoot`**、**`popUntil`**，与路由器方法对应；**`context`** 可省略时使用已配置的 **`currentContext`**（与 **`push`** 相同）。
+- **CI**：在 `flutter test` 之前先在 `example/` 内执行 `flutter pub get` 与 `dart run build_runner build --delete-conflicting-outputs`，预生成 `.router.g.dart`（这些文件被 `.gitignore` 排除），修复 CI 上 `deferred_generation_regression_test.dart` 因找不到生成文件而失败的问题；`test` / `publish` 两个 job 步骤对齐；触发 `paths` 增加 `example/**` 与 `.github/workflows/**`。
+- **静态分析**：`dart analyze --fatal-warnings --fatal-infos` 零告警。`route_strategy.dart` 中 `NativeRouteStrategy` / `MaterialRouteStrategy` / `CupertinoRouteStrategy` / `CustomRouteStrategy` / `SimpleTransitionStrategy` 的局部闭包改为函数声明；`fluro_router_gen.dart` 单语句 `if` 补花括号；`example` 中 `authGuard2` 的 `await` 后 `context` 使用与 `authGuard1` 对齐。
 
 ---
 

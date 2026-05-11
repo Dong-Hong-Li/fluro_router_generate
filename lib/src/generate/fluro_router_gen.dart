@@ -699,9 +699,15 @@ String _buildDeferredHandlerCall(_RouteEntry e) {
     );
     sb.writeln('$indent loader: () => $loader,');
     sb.writeln('$indent debugLabel: \'$pathArg\',');
-    sb.writeln('$indent loadingBuilder: FluroConfig.deferredLoadingBuilderFor(\'$pathArg\'),');
-    sb.writeln('$indent errorBuilder: FluroConfig.deferredErrorBuilderFor(\'$pathArg\'),');
-    sb.writeln('$indent wrapper: FluroConfig.deferredWrapperFor(\'$pathArg\'),');
+    sb.writeln(
+      '$indent loadingBuilder: FluroConfig.deferredLoadingBuilderFor(\'$pathArg\'),',
+    );
+    sb.writeln(
+      '$indent errorBuilder: FluroConfig.deferredErrorBuilderFor(\'$pathArg\'),',
+    );
+    sb.writeln(
+      '$indent wrapper: FluroConfig.deferredWrapperFor(\'$pathArg\'),',
+    );
     sb.writeln('$indent builder: (context) {');
     sb.writeln('$indent   final arguments = context.arguments;');
     sb.writeln(
@@ -842,8 +848,9 @@ Future<List<_RouteEntry>> _collectAnnotatedRoutes(
 
     // 排除生成的路由表文件（.router.g.dart 及其它 .g.dart）
     if (assetId.path.endsWith('.router.g.dart') ||
-        assetId.path.endsWith('.g.dart'))
+        assetId.path.endsWith('.g.dart')) {
       continue;
+    }
 
     // 获取当前类的库
     final lib = await buildStep.resolver.libraryFor(assetId);

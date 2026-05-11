@@ -71,13 +71,11 @@ abstract class RouteStrategy {
 class NativeRouteStrategy implements RouteStrategy {
   @override
   PageRoute<dynamic> createRoute(RouteConfiguration routeConfig) {
-    final builder = (BuildContext context) {
-      return routeConfig.handler.handlerFunc(
-            context,
-            routeConfig.parameters,
-          ) ??
+    Widget builder(BuildContext context) {
+      return routeConfig.handler.handlerFunc(context, routeConfig.parameters) ??
           const SizedBox.shrink();
-    };
+    }
+
     if (routeConfig.disableSwipeBack) {
       return _NoPopGestureMaterialPageRoute<dynamic>(
         settings: routeConfig.routeSettings,
@@ -99,13 +97,11 @@ class NativeRouteStrategy implements RouteStrategy {
 class MaterialRouteStrategy implements RouteStrategy {
   @override
   PageRoute<dynamic> createRoute(RouteConfiguration routeConfig) {
-    final builder = (BuildContext context) {
-      return routeConfig.handler.handlerFunc(
-            context,
-            routeConfig.parameters,
-          ) ??
+    Widget builder(BuildContext context) {
+      return routeConfig.handler.handlerFunc(context, routeConfig.parameters) ??
           const SizedBox.shrink();
-    };
+    }
+
     if (routeConfig.disableSwipeBack) {
       return _NoPopGestureMaterialPageRoute<dynamic>(
         settings: routeConfig.routeSettings,
@@ -129,13 +125,11 @@ class MaterialRouteStrategy implements RouteStrategy {
 class CupertinoRouteStrategy implements RouteStrategy {
   @override
   PageRoute<dynamic> createRoute(RouteConfiguration routeConfig) {
-    final builder = (BuildContext context) {
-      return routeConfig.handler.handlerFunc(
-            context,
-            routeConfig.parameters,
-          ) ??
+    Widget builder(BuildContext context) {
+      return routeConfig.handler.handlerFunc(context, routeConfig.parameters) ??
           const SizedBox.shrink();
-    };
+    }
+
     if (routeConfig.disableSwipeBack) {
       return _NoPopGestureCupertinoPageRoute<dynamic>(
         settings: routeConfig.routeSettings,
@@ -164,18 +158,14 @@ class CustomRouteStrategy implements RouteStrategy {
     routeTransitionsBuilder =
         routeConfig.transitionsBuilder ?? routeConfig.route?.transitionBuilder;
 
-    final RoutePageBuilder pageBuilder =
-        (
-          BuildContext context,
-          Animation<double> animation,
-          Animation<double> secondaryAnimation,
-        ) {
-          return routeConfig.handler.handlerFunc(
-                context,
-                routeConfig.parameters,
-              ) ??
-              const SizedBox.shrink();
-        };
+    Widget pageBuilder(
+      BuildContext context,
+      Animation<double> animation,
+      Animation<double> secondaryAnimation,
+    ) {
+      return routeConfig.handler.handlerFunc(context, routeConfig.parameters) ??
+          const SizedBox.shrink();
+    }
 
     final td = routeConfig.transition == TransitionType.none
         ? Duration.zero
@@ -191,8 +181,12 @@ class CustomRouteStrategy implements RouteStrategy {
 
     final RouteTransitionsBuilder tb =
         routeConfig.transition == TransitionType.none
-        ? (BuildContext _, Animation<double> __, Animation<double> ___, Widget child) =>
-              child
+        ? (
+            BuildContext _,
+            Animation<double> __,
+            Animation<double> ___,
+            Widget child,
+          ) => child
         : routeTransitionsBuilder!;
 
     if (routeConfig.disableSwipeBack) {
@@ -230,18 +224,14 @@ class SimpleTransitionStrategy implements RouteStrategy {
 
   @override
   PageRoute<dynamic> createRoute(RouteConfiguration routeConfig) {
-    final RoutePageBuilder pageBuilder =
-        (
-          BuildContext context,
-          Animation<double> animation,
-          Animation<double> secondaryAnimation,
-        ) {
-          return routeConfig.handler.handlerFunc(
-                context,
-                routeConfig.parameters,
-              ) ??
-              const SizedBox.shrink();
-        };
+    Widget pageBuilder(
+      BuildContext context,
+      Animation<double> animation,
+      Animation<double> secondaryAnimation,
+    ) {
+      return routeConfig.handler.handlerFunc(context, routeConfig.parameters) ??
+          const SizedBox.shrink();
+    }
 
     final td =
         routeConfig.transitionDuration ??

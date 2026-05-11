@@ -19,12 +19,16 @@ on:
       - 'pubspec.yaml'
       - 'lib/**'
       - 'test/**'
+      - 'example/**'
+      - '.github/workflows/**'
   pull_request:
     branches: [main]
     paths:
       - 'pubspec.yaml'
       - 'lib/**'
       - 'test/**'
+      - 'example/**'
+      - '.github/workflows/**'
 
 # -----------------------------------------------------------------------------
 # 常见设计：拆成两个 job
@@ -39,6 +43,7 @@ jobs:
     if: "!startsWith(github.ref, 'refs/tags/')"
     steps:
       - uses: actions/checkout@v6
+
       # 安装 Flutter（需自带 Dart ≥ pubspec environment.sdk，当前为 ^3.8.1）
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -46,11 +51,22 @@ jobs:
           flutter-version: '3.35.6'
           channel: 'stable'
           cache: true
-          architecture: 'x64'
 
-      # 安装项目依赖
-      - name: Install dependencies
+      # 安装库本体依赖
+      - name: Install dependencies (root)
         run: flutter pub get
+
+      # 安装 example 依赖（example 的生成产物 .router.g.dart 被 .gitignore 排除，
+      # CI 上 deferred_generation_regression_test.dart 依赖这些文件，必须现场重新生成）
+      - name: Install dependencies (example)
+        working-directory: example
+        run: flutter pub get
+
+      # 在 example 内运行 build_runner 重新生成路由表（.router.g.dart），
+      # 否则 test/deferred_generation_regression_test.dart 会因为找不到生成文件而失败。
+      - name: Generate router code (example)
+        working-directory: example
+        run: dart run build_runner build --delete-conflicting-outputs
 
       # 静态分析（PR/推分支时就能发现 lint/analyze 问题）
       - name: Static analysis
@@ -65,7 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     # 只有推了 v 开头的 tag 时才跑
     if: startsWith(github.ref, 'refs/tags/v')
-    
+
     steps:
       - uses: actions/checkout@v6
 
@@ -77,21 +93,28 @@ jobs:
           channel: 'stable'
           cache: true
 
-      # 安装项目依赖
-      - name: Install dependencies
+      - name: Install dependencies (root)
         run: flutter pub get
-      
-      # 格式化代码
+
+      - name: Install dependencies (example)
+        working-directory: example
+        run: flutter pub get
+
+      - name: Generate router code (example)
+        working-directory: example
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      # 格式化代码（保持仓库现有约定：只 format 不 fail）
       - name: Format code
         run: dart format .
+
+      # 静态分析
+      - name: Static analysis
+        run: dart analyze --fatal-warnings --fatal-infos
 
       # 执行所有测试
       - name: Run tests
         run: flutter test
-
-      # 静态分析
-      - name: Static analysis
-        run: flutter analyze
 
       # - name: Publish to pub.dev
       #   run: dart pub publish --force
